@@ -27,7 +27,8 @@ st.set_page_config(
 
 
 def get_google_sheet_csv_url(sheet_url):
-    match = re.search(r"/d/([a-zA-Z0-9_]+)", sheet_url)
+    match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
+
     if not match:
         st.error("Could not read the Google Sheet ID.")
         st.stop()
@@ -143,16 +144,6 @@ st.markdown(
         background: linear-gradient(180deg, #f3f7fb 0%, #ffffff 100%);
     }
 
-    .main-card {
-        background: white;
-        border-radius: 18px;
-        padding: 24px;
-        box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
-        border: 1px solid #d9e6f5;
-        text-align: center;
-        min-height: 165px;
-    }
-
     .section-card {
         background: white;
         border-radius: 18px;
@@ -160,56 +151,7 @@ st.markdown(
         box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
         border: 1px solid #d9e6f5;
         margin-bottom: 18px;
-    }
-
-    .metric-title {
-        font-size: 15px;
-        color: #0a1f44;
-        font-weight: 700;
-        margin-top: 6px;
-    }
-
-    .metric-value-blue {
-        font-size: 42px;
-        color: #0066cc;
-        font-weight: 900;
-    }
-
-    .metric-value-green {
-        font-size: 42px;
-        color: #0a9d4f;
-        font-weight: 900;
-    }
-
-    .metric-value-gold {
-        font-size: 42px;
-        color: #f2a900;
-        font-weight: 900;
-    }
-
-    .metric-value-grey {
-        font-size: 42px;
-        color: #667085;
-        font-weight: 900;
-    }
-
-    .prize-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #e5edf6;
-        padding: 10px 0;
-        color: #0a1f44;
-        font-size: 15px;
-    }
-
-    .prize-row:last-child {
-        border-bottom: none;
-    }
-
-    .prize-amount {
-        font-weight: 900;
-        color: #0a1f44;
+        min-height: 160px;
     }
 
     .event-title {
@@ -220,15 +162,36 @@ st.markdown(
     }
 
     .event-main {
-        font-size: 34px;
+        font-size: 38px;
         font-weight: 900;
         text-align: center;
+        margin-top: 12px;
     }
 
     .event-sub {
         color: #0a1f44;
-        font-size: 14px;
+        font-size: 15px;
         text-align: center;
+        margin-top: 8px;
+    }
+
+    .prize-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e5edf6;
+        padding: 8px 0;
+        color: #0a1f44;
+        font-size: 14px;
+    }
+
+    .prize-row:last-child {
+        border-bottom: none;
+    }
+
+    .prize-amount {
+        font-weight: 900;
+        color: #0a1f44;
     }
 
     .taken-badge {
@@ -271,8 +234,6 @@ teams_df = teams_df[teams_df["Nation"] != ""].copy()
 
 total_teams = len(teams_df)
 taken_teams = teams_df["Owned By"].apply(owner_is_taken).sum()
-remaining_teams = total_teams - taken_teams
-prize_fund = total_teams * PRICE_PER_TEAM
 
 
 banner_path = os.path.join(ASSET_FOLDER, BANNER_FILE)
@@ -284,45 +245,41 @@ else:
     st.title("🏆 World Cup 2026 Sweepstake")
 
 
-col1, col2, col3, col4 = st.columns([1, 1, 1, 1.45])
+earliest_goal_time, earliest_goal_team, earliest_goal_player = get_event(events_df, "Earliest Goal")
+yellow_time, yellow_team, yellow_player = get_event(events_df, "Earliest Yellow Card")
+red_time, red_team, red_player = get_event(events_df, "Earliest Red Card")
+favourite_time, favourite_team, favourite_player = get_event(events_df, "Tournament Favourite")
 
-with col1:
-    st.markdown(
-        f"""
-        <div class="main-card">
-            <div style="font-size: 48px;">✅</div>
-            <div class="metric-value-green">{taken_teams}</div>
-            <div class="metric-title">Teams Taken</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+goal_main, goal_sub = event_line(earliest_goal_time, earliest_goal_team, earliest_goal_player)
+yellow_main, yellow_sub = event_line(yellow_time, yellow_team, yellow_player)
+red_main, red_sub = event_line(red_time, red_team, red_player)
+fav_main, fav_sub = event_line("", favourite_team, favourite_player)
 
-with col2:
-    st.markdown(
-        f"""
-        <div class="main-card">
-            <div style="font-size: 48px;">⚽</div>
-            <div class="metric-value-blue">{remaining_teams}</div>
-            <div class="metric-title">Teams Remaining</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+top_cols = st.columns([1, 1, 1, 1, 1.35])
 
-with col3:
-    st.markdown(
-        f"""
-        <div class="main-card">
-            <div style="font-size: 48px;">🏆</div>
-            <div class="metric-value-gold">£{prize_fund}</div>
-            <div class="metric-title">Total Prize Fund</div>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+event_items = [
+    ("FASTEST GOAL", goal_main, goal_sub, "#0a9d4f"),
+    ("EARLIEST YELLOW CARD", yellow_main, yellow_sub, "#f2a900"),
+    ("EARLIEST RED CARD", red_main, red_sub, "#e33b2e"),
+    ("TOURNAMENT FAVOURITE", fav_main, fav_sub, "#0066cc"),
+]
 
-with col4:
+for column, item in zip(top_cols[:4], event_items):
+    title, main, sub, colour = item
+
+    with column:
+        st.markdown(
+            f"""
+            <div class="section-card">
+                <div class="event-title">{title}</div>
+                <div class="event-main" style="color:{colour};">{main}</div>
+                <div class="event-sub">{sub}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+with top_cols[4]:
     prize_rows = ""
 
     for prize, amount in PRIZES.items():
@@ -344,41 +301,6 @@ with col4:
         """,
         unsafe_allow_html=True
     )
-
-
-earliest_goal_time, earliest_goal_team, earliest_goal_player = get_event(events_df, "Earliest Goal")
-yellow_time, yellow_team, yellow_player = get_event(events_df, "Earliest Yellow Card")
-red_time, red_team, red_player = get_event(events_df, "Earliest Red Card")
-favourite_time, favourite_team, favourite_player = get_event(events_df, "Tournament Favourite")
-
-goal_main, goal_sub = event_line(earliest_goal_time, earliest_goal_team, earliest_goal_player)
-yellow_main, yellow_sub = event_line(yellow_time, yellow_team, yellow_player)
-red_main, red_sub = event_line(red_time, red_team, red_player)
-fav_main, fav_sub = event_line("", favourite_team, favourite_player)
-
-event_items = [
-    ("FASTEST GOAL", goal_main, goal_sub, "#0a9d4f"),
-    ("EARLIEST YELLOW CARD", yellow_main, yellow_sub, "#f2a900"),
-    ("EARLIEST RED CARD", red_main, red_sub, "#e33b2e"),
-    ("TOURNAMENT FAVOURITE", fav_main, fav_sub, "#0066cc"),
-]
-
-event_cols = st.columns(4)
-
-for column, item in zip(event_cols, event_items):
-    title, main, sub, colour = item
-
-    with column:
-        st.markdown(
-            f"""
-            <div class="section-card">
-                <div class="event-title">{title}</div>
-                <div class="event-main" style="color:{colour};">{main}</div>
-                <div class="event-sub">{sub}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
 
 
 left, right = st.columns([3, 1])
@@ -442,6 +364,7 @@ st.dataframe(
     hide_index=True,
     height=650
 )
+
 
 st.markdown(
     """
