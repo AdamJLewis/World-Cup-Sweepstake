@@ -9,8 +9,6 @@ GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1GDI1_PquleJILX6fRqbi
 ASSET_FOLDER = "Assets"
 BANNER_FILE = "Page_Banner.png"
 
-PRICE_PER_TEAM = 5
-
 PRIZES = {
     "Tournament Winner": "£100",
     "Tournament Runner Up": "£50",
@@ -19,30 +17,21 @@ PRIZES = {
     "Earliest Red Card": "£30",
 }
 
-st.set_page_config(
-    page_title="World Cup 2026 Sweepstake",
-    page_icon="🏆",
-    layout="wide"
-)
+st.set_page_config(page_title="World Cup 2026 Sweepstake", page_icon="🏆", layout="wide")
 
 
 def get_google_sheet_csv_url(sheet_url):
     match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
-
     if not match:
         st.error("Could not read the Google Sheet ID.")
         st.stop()
-
-    sheet_id = match.group(1)
-    return f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
+    return f"https://docs.google.com/spreadsheets/d/{match.group(1)}/gviz/tq?tqx=out:csv"
 
 
 @st.cache_data(ttl=60)
 def load_raw_google_sheet():
-    csv_url = get_google_sheet_csv_url(GOOGLE_SHEET_URL)
-
     try:
-        return pd.read_csv(csv_url, header=None)
+        return pd.read_csv(get_google_sheet_csv_url(GOOGLE_SHEET_URL), header=None)
     except Exception as error:
         st.error("Could not load the Google Sheet.")
         st.write(error)
@@ -57,16 +46,10 @@ def clean_value(value):
 
 
 def find_header_row(raw_df, required_headers):
-    required_headers_clean = [
-        header.lower().replace(" ", "") for header in required_headers
-    ]
+    required_headers_clean = [h.lower().replace(" ", "") for h in required_headers]
 
     for row_index, row in raw_df.iterrows():
-        row_values = [
-            clean_value(value).lower().replace(" ", "")
-            for value in row.tolist()
-        ]
-
+        row_values = [clean_value(v).lower().replace(" ", "") for v in row.tolist()]
         if all(header in row_values for header in required_headers_clean):
             return row_index, row_values
 
@@ -80,11 +63,10 @@ def extract_table(raw_df, required_headers):
         st.error(f"Could not find table with headers: {required_headers}")
         st.stop()
 
-    column_indexes = []
-
-    for required_header in required_headers:
-        clean_required = required_header.lower().replace(" ", "")
-        column_indexes.append(cleaned_headers.index(clean_required))
+    column_indexes = [
+        cleaned_headers.index(header.lower().replace(" ", ""))
+        for header in required_headers
+    ]
 
     rows = []
 
@@ -127,13 +109,10 @@ def get_event(events_df, category):
 def event_line(time_value, team, player):
     if time_value and team and player:
         return f"{time_value}’", f"{player} ({team})"
-
     if team and player:
         return team, player
-
     if team:
         return team, ""
-
     return "Awaiting result", ""
 
 
@@ -147,32 +126,45 @@ st.markdown(
     .section-card {
         background: white;
         border-radius: 18px;
-        padding: 22px;
+        padding: 20px;
         box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
         border: 1px solid #d9e6f5;
-        margin-bottom: 18px;
-        min-height: 160px;
+        height: 210px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     .event-title {
         color: #0a1f44;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 900;
         text-align: center;
+        min-height: 32px;
     }
 
     .event-main {
-        font-size: 38px;
+        font-size: 34px;
         font-weight: 900;
         text-align: center;
-        margin-top: 12px;
+        margin-top: 6px;
+        min-height: 48px;
     }
 
     .event-sub {
         color: #0a1f44;
-        font-size: 15px;
+        font-size: 14px;
         text-align: center;
-        margin-top: 8px;
+        margin-top: 6px;
+        min-height: 24px;
+    }
+
+    .prize-title {
+        text-align: center;
+        color: #0a1f44;
+        margin: 0 0 8px 0;
+        font-size: 21px;
+        font-weight: 900;
     }
 
     .prize-row {
@@ -180,9 +172,9 @@ st.markdown(
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid #e5edf6;
-        padding: 8px 0;
+        padding: 6px 0;
         color: #0a1f44;
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .prize-row:last-child {
@@ -220,15 +212,8 @@ st.markdown(
 
 raw_df = load_raw_google_sheet()
 
-teams_df = extract_table(
-    raw_df,
-    ["Nation", "Flag", "Owned By", "Status"]
-)
-
-events_df = extract_table(
-    raw_df,
-    ["Category", "Time", "Team", "Player"]
-)
+teams_df = extract_table(raw_df, ["Nation", "Flag", "Owned By", "Status"])
+events_df = extract_table(raw_df, ["Category", "Time", "Team", "Player"])
 
 teams_df = teams_df[teams_df["Nation"] != ""].copy()
 
@@ -239,8 +224,7 @@ taken_teams = teams_df["Owned By"].apply(owner_is_taken).sum()
 banner_path = os.path.join(ASSET_FOLDER, BANNER_FILE)
 
 if os.path.exists(banner_path):
-    banner = Image.open(banner_path)
-    st.image(banner, use_container_width=True)
+    st.image(Image.open(banner_path), use_container_width=True)
 else:
     st.title("🏆 World Cup 2026 Sweepstake")
 
@@ -255,7 +239,7 @@ yellow_main, yellow_sub = event_line(yellow_time, yellow_team, yellow_player)
 red_main, red_sub = event_line(red_time, red_team, red_player)
 fav_main, fav_sub = event_line("", favourite_team, favourite_player)
 
-top_cols = st.columns([1, 1, 1, 1, 1.35])
+top_cols = st.columns(5)
 
 event_items = [
     ("FASTEST GOAL", goal_main, goal_sub, "#0a9d4f"),
@@ -293,9 +277,7 @@ with top_cols[4]:
     st.markdown(
         f"""
         <div class="section-card">
-            <h4 style="text-align:center;color:#0a1f44;margin-top:0;">
-                PRIZE BREAKDOWN
-            </h4>
+            <div class="prize-title">PRIZE BREAKDOWN</div>
             {prize_rows}
         </div>
         """,
@@ -336,17 +318,12 @@ display_df = display_df.rename(columns={"Nation": "Team"})
 
 search = st.text_input("Search teams or owners", "")
 
-filter_option = st.radio(
-    "Filter",
-    ["All", "Available", "Taken"],
-    horizontal=True
-)
+filter_option = st.radio("Filter", ["All", "Available", "Taken"], horizontal=True)
 
 filtered_df = display_df.copy()
 
 if search:
     search_lower = search.lower()
-
     filtered_df = filtered_df[
         filtered_df["Team"].astype(str).str.lower().str.contains(search_lower)
         | filtered_df["Owned By"].astype(str).str.lower().str.contains(search_lower)
@@ -358,13 +335,7 @@ if filter_option == "Available":
 if filter_option == "Taken":
     filtered_df = filtered_df[filtered_df["Owned By"] != "Available"]
 
-st.dataframe(
-    filtered_df,
-    use_container_width=True,
-    hide_index=True,
-    height=650
-)
-
+st.dataframe(filtered_df, use_container_width=True, hide_index=True, height=650)
 
 st.markdown(
     """
