@@ -3,6 +3,7 @@ import re
 import base64
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from PIL import Image
 
 GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1GDI1_PquleJILX6fRqbib8Zalhbb2ua9klO5OUTIG4M/edit?usp=sharing"
@@ -130,8 +131,7 @@ def image_to_base64(path):
 
 
 def flag_html(flag_file):
-    flag_path = os.path.join(ASSET_FOLDER, flag_file)
-
+    flag_path = os.path.join(ASSET_FOLDER, clean_value(flag_file))
     encoded = image_to_base64(flag_path)
 
     if not encoded:
@@ -149,21 +149,7 @@ def status_html(status):
     return '<span class="status active">● Active</span>'
 
 
-def render_team_table(df):
-    midpoint = (len(df) + 1) // 2
-    left_df = df.iloc[:midpoint].copy()
-    right_df = df.iloc[midpoint:].copy()
-
-    col1, col2 = st.columns(2)
-
-    with col1:
-        render_half_table(left_df)
-
-    with col2:
-        render_half_table(right_df)
-
-
-def render_half_table(df):
+def build_half_table_html(df):
     rows_html = ""
 
     for index, row in df.iterrows():
@@ -182,7 +168,7 @@ def render_half_table(df):
         </tr>
         """
 
-    table_html = f"""
+    return f"""
     <table class="team-table">
         <thead>
             <tr>
@@ -198,7 +184,107 @@ def render_half_table(df):
     </table>
     """
 
-    st.markdown(table_html, unsafe_allow_html=True)
+
+def render_team_tables(df):
+    midpoint = (len(df) + 1) // 2
+    left_df = df.iloc[:midpoint].copy()
+    right_df = df.iloc[midpoint:].copy()
+
+    left_table = build_half_table_html(left_df)
+    right_table = build_half_table_html(right_df)
+
+    table_html = f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background: transparent;
+            }}
+
+            .table-grid {{
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }}
+
+            .team-table {{
+                width: 100%;
+                border-collapse: collapse;
+                background: white;
+                border-radius: 14px;
+                overflow: hidden;
+                border: 1px solid #d9e6f5;
+                font-size: 14px;
+            }}
+
+            .team-table th {{
+                background: #061b3a;
+                color: white;
+                text-align: left;
+                padding: 10px 12px;
+                font-size: 13px;
+                text-transform: uppercase;
+            }}
+
+            .team-table td {{
+                padding: 9px 12px;
+                border-bottom: 1px solid #e5edf6;
+                color: #0a1f44;
+                vertical-align: middle;
+            }}
+
+            .team-table tr:nth-child(even) {{
+                background: #f8fbff;
+            }}
+
+            .number-cell {{
+                width: 42px;
+                text-align: center;
+                font-weight: 700;
+            }}
+
+            .team-cell {{
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 600;
+            }}
+
+            .flag-img {{
+                width: 24px;
+                height: 16px;
+                object-fit: cover;
+                border-radius: 2px;
+                box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+            }}
+
+            .status {{
+                font-weight: 800;
+                white-space: nowrap;
+            }}
+
+            .active {{
+                color: #0a9d4f;
+            }}
+
+            .eliminated {{
+                color: #e33b2e;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="table-grid">
+            <div>{left_table}</div>
+            <div>{right_table}</div>
+        </div>
+    </body>
+    </html>
+    """
+
+    table_height = max(760, int((len(df) / 2) * 38) + 80)
+    components.html(table_html, height=table_height, scrolling=False)
 
 
 st.markdown(
@@ -280,74 +366,6 @@ st.markdown(
         font-weight: 900;
         font-size: 20px;
         border: 1px solid #d9e6f5;
-    }
-
-    .team-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: white;
-        border-radius: 14px;
-        overflow: hidden;
-        box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
-        border: 1px solid #d9e6f5;
-        font-size: 14px;
-    }
-
-    .team-table th {
-        background: #061b3a;
-        color: white;
-        text-align: left;
-        padding: 10px 12px;
-        font-size: 13px;
-        text-transform: uppercase;
-    }
-
-    .team-table td {
-        padding: 9px 12px;
-        border-bottom: 1px solid #e5edf6;
-        color: #0a1f44;
-    }
-
-    .team-table tr:last-child td {
-        border-bottom: none;
-    }
-
-    .team-table tr:nth-child(even) {
-        background: #f8fbff;
-    }
-
-    .number-cell {
-        width: 42px;
-        text-align: center;
-        font-weight: 700;
-    }
-
-    .team-cell {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 600;
-    }
-
-    .flag-img {
-        width: 24px;
-        height: 16px;
-        object-fit: cover;
-        border-radius: 2px;
-        box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
-    }
-
-    .status {
-        font-weight: 800;
-        white-space: nowrap;
-    }
-
-    .status.active {
-        color: #0a9d4f;
-    }
-
-    .status.eliminated {
-        color: #e33b2e;
     }
 
     .footer-card {
@@ -485,7 +503,7 @@ if filter_option == "Eliminated":
 
 filtered_df = filtered_df.reset_index(drop=True)
 
-render_team_table(filtered_df)
+render_team_tables(filtered_df)
 
 
 st.markdown(
