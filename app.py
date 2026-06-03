@@ -28,6 +28,7 @@ st.set_page_config(
 
 def get_google_sheet_csv_url(sheet_url):
     match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
+
     if not match:
         st.error("Could not read the Google Sheet ID.")
         st.stop()
@@ -114,10 +115,13 @@ def get_event(events_df, category):
 def event_line(time_value, team, player):
     if time_value and team and player:
         return f"{time_value}’", f"{player} ({team})"
+
     if team and player:
         return team, player
+
     if team:
         return team, ""
+
     return "Awaiting result", ""
 
 
@@ -272,6 +276,12 @@ def render_team_tables(df):
             .eliminated {{
                 color: #e33b2e;
             }}
+
+            @media (max-width: 900px) {{
+                .table-grid {{
+                    grid-template-columns: 1fr;
+                }}
+            }}
         </style>
     </head>
     <body>
@@ -357,17 +367,6 @@ st.markdown(
         color: #0a1f44;
     }
 
-    .taken-badge {
-        background: #eef5fc;
-        border-radius: 12px;
-        padding: 14px;
-        text-align: center;
-        color: #0a1f44;
-        font-weight: 900;
-        font-size: 20px;
-        border: 1px solid #d9e6f5;
-    }
-
     .footer-card {
         background: linear-gradient(90deg, #eef5fc, #ffffff);
         border-radius: 18px;
@@ -388,9 +387,6 @@ events_df = extract_table(raw_df, ["Category", "Time", "Team", "Player"])
 
 teams_df = teams_df[teams_df["Nation"] != ""].copy()
 teams_df = teams_df.reset_index(drop=True)
-
-total_teams = len(teams_df)
-taken_teams = teams_df["Owned By"].apply(lambda x: clean_value(x) != "").sum()
 
 
 banner_path = os.path.join(ASSET_FOLDER, BANNER_FILE)
@@ -457,21 +453,7 @@ with top_cols[4]:
     )
 
 
-left, right = st.columns([3, 1])
-
-with left:
-    st.markdown("## 🏆 Team Selections")
-
-with right:
-    st.markdown(
-        f"""
-        <div class="taken-badge">
-            <span style="color:#0a9d4f;">{taken_teams}</span> / {total_teams} Teams Taken
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
-
+st.markdown("## 🏆 Team Selections")
 
 search = st.text_input("Search teams or owners", "")
 
