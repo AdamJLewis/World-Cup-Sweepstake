@@ -19,7 +19,6 @@ PRIZES = {
     "Earliest Red Card": "£30",
 }
 
-
 st.set_page_config(
     page_title="World Cup 2026 Sweepstake",
     page_icon="🏆",
@@ -28,14 +27,12 @@ st.set_page_config(
 
 
 def get_google_sheet_csv_url(sheet_url):
-    match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
-
+    match = re.search(r"/d/([a-zA-Z0-9_]+)", sheet_url)
     if not match:
-        st.error("Could not read the Google Sheet ID from the link.")
+        st.error("Could not read the Google Sheet ID.")
         st.stop()
 
     sheet_id = match.group(1)
-
     return f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
 
 
@@ -55,12 +52,13 @@ def load_raw_google_sheet():
 def clean_value(value):
     if pd.isna(value):
         return ""
-
     return str(value).strip()
 
 
 def find_header_row(raw_df, required_headers):
-    required_headers = [header.lower().replace(" ", "") for header in required_headers]
+    required_headers_clean = [
+        header.lower().replace(" ", "") for header in required_headers
+    ]
 
     for row_index, row in raw_df.iterrows():
         row_values = [
@@ -68,7 +66,7 @@ def find_header_row(raw_df, required_headers):
             for value in row.tolist()
         ]
 
-        if all(header in row_values for header in required_headers):
+        if all(header in row_values for header in required_headers_clean):
             return row_index, row_values
 
     return None, None
@@ -125,6 +123,19 @@ def get_event(events_df, category):
     )
 
 
+def event_line(time_value, team, player):
+    if time_value and team and player:
+        return f"{time_value}’", f"{player} ({team})"
+
+    if team and player:
+        return team, player
+
+    if team:
+        return team, ""
+
+    return "Awaiting result", ""
+
+
 st.markdown(
     """
     <style>
@@ -139,7 +150,7 @@ st.markdown(
         box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
         border: 1px solid #d9e6f5;
         text-align: center;
-        min-height: 170px;
+        min-height: 165px;
     }
 
     .section-card {
@@ -174,6 +185,31 @@ st.markdown(
         font-size: 42px;
         color: #f2a900;
         font-weight: 900;
+    }
+
+    .metric-value-grey {
+        font-size: 42px;
+        color: #667085;
+        font-weight: 900;
+    }
+
+    .prize-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #e5edf6;
+        padding: 10px 0;
+        color: #0a1f44;
+        font-size: 15px;
+    }
+
+    .prize-row:last-child {
+        border-bottom: none;
+    }
+
+    .prize-amount {
+        font-weight: 900;
+        color: #0a1f44;
     }
 
     .event-title {
@@ -235,6 +271,7 @@ teams_df = teams_df[teams_df["Nation"] != ""].copy()
 
 total_teams = len(teams_df)
 taken_teams = teams_df["Owned By"].apply(owner_is_taken).sum()
+remaining_teams = total_teams - taken_teams
 prize_fund = total_teams * PRICE_PER_TEAM
 
 
@@ -253,9 +290,9 @@ with col1:
     st.markdown(
         f"""
         <div class="main-card">
-            <div style="font-size: 48px;">⚽</div>
-            <div class="metric-value-blue">{total_teams}</div>
-            <div class="metric-title">Teams Available</div>
+            <div style="font-size: 48px;">✅</div>
+            <div class="metric-value-green">{taken_teams}</div>
+            <div class="metric-title">Teams Taken</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -265,9 +302,9 @@ with col2:
     st.markdown(
         f"""
         <div class="main-card">
-            <div style="font-size: 48px;">💷</div>
-            <div class="metric-value-green">£{PRICE_PER_TEAM}</div>
-            <div class="metric-title">Per Team</div>
+            <div style="font-size: 48px;">⚽</div>
+            <div class="metric-value-blue">{remaining_teams}</div>
+            <div class="metric-title">Teams Remaining</div>
         </div>
         """,
         unsafe_allow_html=True
@@ -286,22 +323,27 @@ with col3:
     )
 
 with col4:
-    prize_html = """
-    <div class="section-card">
-        <h4 style="text-align:center;color:#0a1f44;">PRIZE BREAKDOWN</h4>
-    """
+    prize_rows = ""
 
     for prize, amount in PRIZES.items():
-        prize_html += f"""
-        <div style="display:flex;justify-content:space-between;border-bottom:1px solid #e5edf6;padding:7px 0;color:#0a1f44;">
+        prize_rows += f"""
+        <div class="prize-row">
             <span>{prize}</span>
-            <strong>{amount}</strong>
+            <span class="prize-amount">{amount}</span>
         </div>
         """
 
-    prize_html += "</div>"
-
-    st.markdown(prize_html, unsafe_allow_html=True)
+    st.markdown(
+        f"""
+        <div class="section-card">
+            <h4 style="text-align:center;color:#0a1f44;margin-top:0;">
+                PRIZE BREAKDOWN
+            </h4>
+            {prize_rows}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 earliest_goal_time, earliest_goal_team, earliest_goal_player = get_event(events_df, "Earliest Goal")
@@ -309,31 +351,16 @@ yellow_time, yellow_team, yellow_player = get_event(events_df, "Earliest Yellow 
 red_time, red_team, red_player = get_event(events_df, "Earliest Red Card")
 favourite_time, favourite_team, favourite_player = get_event(events_df, "Tournament Favourite")
 
+goal_main, goal_sub = event_line(earliest_goal_time, earliest_goal_team, earliest_goal_player)
+yellow_main, yellow_sub = event_line(yellow_time, yellow_team, yellow_player)
+red_main, red_sub = event_line(red_time, red_team, red_player)
+fav_main, fav_sub = event_line("", favourite_team, favourite_player)
+
 event_items = [
-    (
-        "FASTEST GOAL",
-        f"{earliest_goal_time}’" if earliest_goal_time else "",
-        f"{earliest_goal_player} ({earliest_goal_team})",
-        "#0a9d4f"
-    ),
-    (
-        "EARLIEST YELLOW CARD",
-        f"{yellow_time}’" if yellow_time else "",
-        f"{yellow_player} ({yellow_team})",
-        "#f2a900"
-    ),
-    (
-        "EARLIEST RED CARD",
-        f"{red_time}’" if red_time else "",
-        f"{red_player} ({red_team})",
-        "#e33b2e"
-    ),
-    (
-        "TOURNAMENT FAVOURITE",
-        favourite_team,
-        favourite_player,
-        "#0066cc"
-    ),
+    ("FASTEST GOAL", goal_main, goal_sub, "#0a9d4f"),
+    ("EARLIEST YELLOW CARD", yellow_main, yellow_sub, "#f2a900"),
+    ("EARLIEST RED CARD", red_main, red_sub, "#e33b2e"),
+    ("TOURNAMENT FAVOURITE", fav_main, fav_sub, "#0066cc"),
 ]
 
 event_cols = st.columns(4)
@@ -416,14 +443,14 @@ st.dataframe(
     height=650
 )
 
-
 st.markdown(
     """
     <div class="footer-card">
         <h3>ℹ How it works</h3>
         <p>
         Pick an available team for £5. Multiple entries allowed.
-        Winners are decided by the tournament winner, runner up and earliest in game events.
+        The tracker updates from the Google Sheet and shows team ownership,
+        prize categories and live tournament milestones.
         </p>
         <p style="font-weight:900;">🏆 Good luck and enjoy the tournament!</p>
     </div>
