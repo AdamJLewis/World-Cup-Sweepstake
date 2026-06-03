@@ -1,5 +1,6 @@
 import os
 import re
+import base64
 import pandas as pd
 import streamlit as st
 from PIL import Image
@@ -17,7 +18,11 @@ PRIZES = {
     "Earliest Red Card": "£30",
 }
 
-st.set_page_config(page_title="World Cup 2026 Sweepstake", page_icon="🏆", layout="wide")
+st.set_page_config(
+    page_title="World Cup 2026 Sweepstake",
+    page_icon="🏆",
+    layout="wide"
+)
 
 
 def get_google_sheet_csv_url(sheet_url):
@@ -25,7 +30,9 @@ def get_google_sheet_csv_url(sheet_url):
     if not match:
         st.error("Could not read the Google Sheet ID.")
         st.stop()
-    return f"https://docs.google.com/spreadsheets/d/{match.group(1)}/gviz/tq?tqx=out:csv"
+
+    sheet_id = match.group(1)
+    return f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
 
 
 @st.cache_data(ttl=60)
@@ -50,6 +57,7 @@ def find_header_row(raw_df, required_headers):
 
     for row_index, row in raw_df.iterrows():
         row_values = [clean_value(v).lower().replace(" ", "") for v in row.tolist()]
+
         if all(header in row_values for header in required_headers_clean):
             return row_index, row_values
 
@@ -84,10 +92,6 @@ def extract_table(raw_df, required_headers):
     return pd.DataFrame(rows)
 
 
-def owner_is_taken(owner):
-    return clean_value(owner) != ""
-
-
 def get_event(events_df, category):
     match = events_df[
         events_df["Category"].astype(str).str.strip().str.lower()
@@ -114,6 +118,87 @@ def event_line(time_value, team, player):
     if team:
         return team, ""
     return "Awaiting result", ""
+
+
+@st.cache_data
+def image_to_base64(path):
+    if not os.path.exists(path):
+        return ""
+
+    with open(path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode()
+
+
+def flag_html(flag_file):
+    flag_path = os.path.join(ASSET_FOLDER, flag_file)
+
+    encoded = image_to_base64(flag_path)
+
+    if not encoded:
+        return ""
+
+    return f'<img src="data:image/png;base64,{encoded}" class="flag-img">'
+
+
+def status_html(status):
+    status_clean = clean_value(status).lower()
+
+    if status_clean == "eliminated":
+        return '<span class="status eliminated">● Eliminated</span>'
+
+    return '<span class="status active">● Active</span>'
+
+
+def render_team_table(df):
+    midpoint = (len(df) + 1) // 2
+    left_df = df.iloc[:midpoint].copy()
+    right_df = df.iloc[midpoint:].copy()
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        render_half_table(left_df)
+
+    with col2:
+        render_half_table(right_df)
+
+
+def render_half_table(df):
+    rows_html = ""
+
+    for index, row in df.iterrows():
+        number = index + 1
+        nation = clean_value(row.get("Nation", ""))
+        flag = clean_value(row.get("Flag", ""))
+        owner = clean_value(row.get("Owned By", ""))
+        status = clean_value(row.get("Status", ""))
+
+        rows_html += f"""
+        <tr>
+            <td class="number-cell">{number}</td>
+            <td class="team-cell">{flag_html(flag)}<span>{nation}</span></td>
+            <td>{owner}</td>
+            <td>{status_html(status)}</td>
+        </tr>
+        """
+
+    table_html = f"""
+    <table class="team-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Team</th>
+                <th>Owned By</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {rows_html}
+        </tbody>
+    </table>
+    """
+
+    st.markdown(table_html, unsafe_allow_html=True)
 
 
 st.markdown(
@@ -197,6 +282,74 @@ st.markdown(
         border: 1px solid #d9e6f5;
     }
 
+    .team-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
+        border: 1px solid #d9e6f5;
+        font-size: 14px;
+    }
+
+    .team-table th {
+        background: #061b3a;
+        color: white;
+        text-align: left;
+        padding: 10px 12px;
+        font-size: 13px;
+        text-transform: uppercase;
+    }
+
+    .team-table td {
+        padding: 9px 12px;
+        border-bottom: 1px solid #e5edf6;
+        color: #0a1f44;
+    }
+
+    .team-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .team-table tr:nth-child(even) {
+        background: #f8fbff;
+    }
+
+    .number-cell {
+        width: 42px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .team-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+    }
+
+    .flag-img {
+        width: 24px;
+        height: 16px;
+        object-fit: cover;
+        border-radius: 2px;
+        box-shadow: 0 0 0 1px rgba(0,0,0,0.08);
+    }
+
+    .status {
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .status.active {
+        color: #0a9d4f;
+    }
+
+    .status.eliminated {
+        color: #e33b2e;
+    }
+
     .footer-card {
         background: linear-gradient(90deg, #eef5fc, #ffffff);
         border-radius: 18px;
@@ -216,9 +369,10 @@ teams_df = extract_table(raw_df, ["Nation", "Flag", "Owned By", "Status"])
 events_df = extract_table(raw_df, ["Category", "Time", "Team", "Player"])
 
 teams_df = teams_df[teams_df["Nation"] != ""].copy()
+teams_df = teams_df.reset_index(drop=True)
 
 total_teams = len(teams_df)
-taken_teams = teams_df["Owned By"].apply(owner_is_taken).sum()
+taken_teams = teams_df["Owned By"].apply(lambda x: clean_value(x) != "").sum()
 
 
 banner_path = os.path.join(ASSET_FOLDER, BANNER_FILE)
@@ -301,41 +455,38 @@ with right:
     )
 
 
-display_df = teams_df.copy()
-
-display_df["Owned By"] = display_df["Owned By"].apply(
-    lambda owner: clean_value(owner) if owner_is_taken(owner) else "Available"
-)
-
-display_df["Status"] = display_df["Owned By"].apply(
-    lambda owner: "🟢 Taken" if owner != "Available" else "⚪ Available"
-)
-
-display_df.insert(0, "#", range(1, len(display_df) + 1))
-
-display_df = display_df[["#", "Nation", "Owned By", "Status"]]
-display_df = display_df.rename(columns={"Nation": "Team"})
-
 search = st.text_input("Search teams or owners", "")
 
-filter_option = st.radio("Filter", ["All", "Available", "Taken"], horizontal=True)
+filter_option = st.radio(
+    "Filter",
+    ["All", "Active", "Eliminated"],
+    horizontal=True
+)
 
-filtered_df = display_df.copy()
+filtered_df = teams_df.copy()
 
 if search:
     search_lower = search.lower()
+
     filtered_df = filtered_df[
-        filtered_df["Team"].astype(str).str.lower().str.contains(search_lower)
+        filtered_df["Nation"].astype(str).str.lower().str.contains(search_lower)
         | filtered_df["Owned By"].astype(str).str.lower().str.contains(search_lower)
     ]
 
-if filter_option == "Available":
-    filtered_df = filtered_df[filtered_df["Owned By"] == "Available"]
+if filter_option == "Active":
+    filtered_df = filtered_df[
+        filtered_df["Status"].astype(str).str.lower().str.strip() == "active"
+    ]
 
-if filter_option == "Taken":
-    filtered_df = filtered_df[filtered_df["Owned By"] != "Available"]
+if filter_option == "Eliminated":
+    filtered_df = filtered_df[
+        filtered_df["Status"].astype(str).str.lower().str.strip() == "eliminated"
+    ]
 
-st.dataframe(filtered_df, use_container_width=True, hide_index=True, height=650)
+filtered_df = filtered_df.reset_index(drop=True)
+
+render_team_table(filtered_df)
+
 
 st.markdown(
     """
@@ -344,7 +495,7 @@ st.markdown(
         <p>
         Pick an available team for £5. Multiple entries allowed.
         The tracker updates from the Google Sheet and shows team ownership,
-        prize categories and live tournament milestones.
+        tournament status, prize categories and live tournament milestones.
         </p>
         <p style="font-weight:900;">🏆 Good luck and enjoy the tournament!</p>
     </div>
