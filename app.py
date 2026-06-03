@@ -1,12 +1,14 @@
 import os
+import re
 import pandas as pd
 import streamlit as st
-from openpyxl import load_workbook
 from PIL import Image
 
-EXCEL_FILE = "World Cup 2026 Sweepstake Tracker.xlsx"
+GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1GDI1_PquleJILX6fRqbib8Zalhbb2ua9klO5OUTIG4M/edit?usp=sharing"
+
 ASSET_FOLDER = "Assets"
 BANNER_FILE = "Page_Banner.png"
+
 PRICE_PER_TEAM = 5
 
 PRIZES = {
@@ -25,107 +27,102 @@ st.set_page_config(
 )
 
 
-def clean_columns(df):
-    df.columns = (
-        df.columns
-        .astype(str)
-        .str.strip()
-        .str.replace("\n", " ")
-        .str.replace("  ", " ")
-    )
-    return df
+def get_google_sheet_csv_url(sheet_url):
+    match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
 
-
-def find_column(df, wanted):
-    for column in df.columns:
-        clean_name = (
-            column.lower()
-            .replace(" ", "")
-            .replace("_", "")
-            .replace("-", "")
-        )
-        if clean_name == wanted:
-            return column
-
-    st.error(f"Could not find column: {wanted}")
-    st.write("Columns found:", list(df.columns))
-    st.stop()
-
-
-@st.cache_data
-def load_team_table():
-    if not os.path.exists(EXCEL_FILE):
-        st.error(f"Could not find {EXCEL_FILE}")
+    if not match:
+        st.error("Could not read the Google Sheet ID from the link.")
         st.stop()
 
-    df = pd.read_excel(EXCEL_FILE, engine="openpyxl")
-    return clean_columns(df)
+    sheet_id = match.group(1)
+
+    return f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
 
 
-@st.cache_data
-def load_event_table():
-    events = {}
+@st.cache_data(ttl=60)
+def load_raw_google_sheet():
+    csv_url = get_google_sheet_csv_url(GOOGLE_SHEET_URL)
 
-    workbook = load_workbook(EXCEL_FILE, data_only=True)
-    sheet = workbook.active
+    try:
+        return pd.read_csv(csv_url, header=None)
+    except Exception as error:
+        st.error("Could not load the Google Sheet.")
+        st.write(error)
+        st.info("Make sure the Google Sheet is shared as Anyone with the link can view.")
+        st.stop()
 
-    header_row = None
-    category_col = None
-    time_col = None
-    team_col = None
-    player_col = None
 
-    for row in sheet.iter_rows():
-        values = [cell.value for cell in row]
-        cleaned = [
-            str(value).strip().lower() if value is not None else ""
-            for value in values
+def clean_value(value):
+    if pd.isna(value):
+        return ""
+
+    return str(value).strip()
+
+
+def find_header_row(raw_df, required_headers):
+    required_headers = [header.lower().replace(" ", "") for header in required_headers]
+
+    for row_index, row in raw_df.iterrows():
+        row_values = [
+            clean_value(value).lower().replace(" ", "")
+            for value in row.tolist()
         ]
 
-        if "category" in cleaned and "time" in cleaned and "team" in cleaned and "player" in cleaned:
-            header_row = row[0].row
-            category_col = cleaned.index("category") + 1
-            time_col = cleaned.index("time") + 1
-            team_col = cleaned.index("team") + 1
-            player_col = cleaned.index("player") + 1
-            break
+        if all(header in row_values for header in required_headers):
+            return row_index, row_values
+
+    return None, None
+
+
+def extract_table(raw_df, required_headers):
+    header_row, cleaned_headers = find_header_row(raw_df, required_headers)
 
     if header_row is None:
-        return events
+        st.error(f"Could not find table with headers: {required_headers}")
+        st.stop()
 
-    for row_number in range(header_row + 1, sheet.max_row + 1):
-        category = sheet.cell(row_number, category_col).value
+    column_indexes = []
 
-        if category is None or str(category).strip() == "":
-            continue
+    for required_header in required_headers:
+        clean_required = required_header.lower().replace(" ", "")
+        column_indexes.append(cleaned_headers.index(clean_required))
 
-        events[str(category).strip()] = {
-            "time": sheet.cell(row_number, time_col).value,
-            "team": sheet.cell(row_number, team_col).value,
-            "player": sheet.cell(row_number, player_col).value,
-        }
+    rows = []
 
-    return events
+    for row_number in range(header_row + 1, len(raw_df)):
+        row_data = {}
+
+        for header, column_index in zip(required_headers, column_indexes):
+            row_data[header] = clean_value(raw_df.iloc[row_number, column_index])
+
+        if all(value == "" for value in row_data.values()):
+            break
+
+        rows.append(row_data)
+
+    return pd.DataFrame(rows)
 
 
-def get_event(events, category):
-    data = events.get(category, {})
+def owner_is_taken(owner):
+    return clean_value(owner) != ""
 
-    time = data.get("time", "")
-    team = data.get("team", "")
-    player = data.get("player", "")
+
+def get_event(events_df, category):
+    match = events_df[
+        events_df["Category"].astype(str).str.strip().str.lower()
+        == category.strip().lower()
+    ]
+
+    if match.empty:
+        return "", "", ""
+
+    row = match.iloc[0]
 
     return (
-        "" if time is None else str(time),
-        "" if team is None else str(team),
-        "" if player is None else str(player),
+        clean_value(row.get("Time", "")),
+        clean_value(row.get("Team", "")),
+        clean_value(row.get("Player", "")),
     )
-
-
-def status_dot(owner):
-    if pd.notna(owner) and str(owner).strip() != "":
-        return "🟢 Taken"
-    return "⚪ Available"
 
 
 st.markdown(
@@ -142,6 +139,16 @@ st.markdown(
         box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
         border: 1px solid #d9e6f5;
         text-align: center;
+        min-height: 170px;
+    }
+
+    .section-card {
+        background: white;
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
+        border: 1px solid #d9e6f5;
+        margin-bottom: 18px;
     }
 
     .metric-title {
@@ -169,15 +176,6 @@ st.markdown(
         font-weight: 900;
     }
 
-    .section-card {
-        background: white;
-        border-radius: 18px;
-        padding: 22px;
-        box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
-        border: 1px solid #d9e6f5;
-        margin-bottom: 18px;
-    }
-
     .event-title {
         color: #0a1f44;
         font-size: 14px;
@@ -186,7 +184,7 @@ st.markdown(
     }
 
     .event-main {
-        font-size: 36px;
+        font-size: 34px;
         font-weight: 900;
         text-align: center;
     }
@@ -205,6 +203,7 @@ st.markdown(
         color: #0a1f44;
         font-weight: 900;
         font-size: 20px;
+        border: 1px solid #d9e6f5;
     }
 
     .footer-card {
@@ -214,28 +213,28 @@ st.markdown(
         border: 1px solid #d9e6f5;
         color: #0a1f44;
     }
-
-    [data-testid="stDataFrame"] {
-        border-radius: 18px;
-        overflow: hidden;
-    }
     </style>
     """,
     unsafe_allow_html=True
 )
 
 
-df = load_team_table()
-events = load_event_table()
+raw_df = load_raw_google_sheet()
 
-nation_col = find_column(df, "nation")
-owner_col = find_column(df, "ownedby")
-status_col = find_column(df, "status")
+teams_df = extract_table(
+    raw_df,
+    ["Nation", "Flag", "Owned By", "Status"]
+)
 
-total_teams = len(df)
-taken_teams = df[owner_col].apply(
-    lambda x: pd.notna(x) and str(x).strip() != ""
-).sum()
+events_df = extract_table(
+    raw_df,
+    ["Category", "Time", "Team", "Player"]
+)
+
+teams_df = teams_df[teams_df["Nation"] != ""].copy()
+
+total_teams = len(teams_df)
+taken_teams = teams_df["Owned By"].apply(owner_is_taken).sum()
 prize_fund = total_teams * PRICE_PER_TEAM
 
 
@@ -287,7 +286,11 @@ with col3:
     )
 
 with col4:
-    prize_html = "<div class='section-card'><h4 style='text-align:center;color:#0a1f44;'>PRIZE BREAKDOWN</h4>"
+    prize_html = """
+    <div class="section-card">
+        <h4 style="text-align:center;color:#0a1f44;">PRIZE BREAKDOWN</h4>
+    """
+
     for prize, amount in PRIZES.items():
         prize_html += f"""
         <div style="display:flex;justify-content:space-between;border-bottom:1px solid #e5edf6;padding:7px 0;color:#0a1f44;">
@@ -295,23 +298,45 @@ with col4:
             <strong>{amount}</strong>
         </div>
         """
+
     prize_html += "</div>"
+
     st.markdown(prize_html, unsafe_allow_html=True)
 
 
-earliest_goal_time, earliest_goal_team, earliest_goal_player = get_event(events, "Earliest Goal")
-yellow_time, yellow_team, yellow_player = get_event(events, "Earliest Yellow Card")
-red_time, red_team, red_player = get_event(events, "Earliest Red Card")
-favourite_time, favourite_team, favourite_player = get_event(events, "Tournament Favourite")
-
-event_cols = st.columns(4)
+earliest_goal_time, earliest_goal_team, earliest_goal_player = get_event(events_df, "Earliest Goal")
+yellow_time, yellow_team, yellow_player = get_event(events_df, "Earliest Yellow Card")
+red_time, red_team, red_player = get_event(events_df, "Earliest Red Card")
+favourite_time, favourite_team, favourite_player = get_event(events_df, "Tournament Favourite")
 
 event_items = [
-    ("FASTEST GOAL", f"{earliest_goal_time}’", f"{earliest_goal_player} ({earliest_goal_team})", "#0a9d4f"),
-    ("EARLIEST YELLOW CARD", f"{yellow_time}’", f"{yellow_player} ({yellow_team})", "#f2a900"),
-    ("EARLIEST RED CARD", f"{red_time}’", f"{red_player} ({red_team})", "#e33b2e"),
-    ("TOURNAMENT FAVOURITE", favourite_team, favourite_player, "#0066cc"),
+    (
+        "FASTEST GOAL",
+        f"{earliest_goal_time}’" if earliest_goal_time else "",
+        f"{earliest_goal_player} ({earliest_goal_team})",
+        "#0a9d4f"
+    ),
+    (
+        "EARLIEST YELLOW CARD",
+        f"{yellow_time}’" if yellow_time else "",
+        f"{yellow_player} ({yellow_team})",
+        "#f2a900"
+    ),
+    (
+        "EARLIEST RED CARD",
+        f"{red_time}’" if red_time else "",
+        f"{red_player} ({red_team})",
+        "#e33b2e"
+    ),
+    (
+        "TOURNAMENT FAVOURITE",
+        favourite_team,
+        favourite_player,
+        "#0066cc"
+    ),
 ]
+
+event_cols = st.columns(4)
 
 for column, item in zip(event_cols, event_items):
     title, main, sub, colour = item
@@ -345,24 +370,20 @@ with right:
     )
 
 
-display_df = df.copy()
+display_df = teams_df.copy()
 
-display_df["Owned By Display"] = display_df[owner_col].apply(
-    lambda x: str(x).strip() if pd.notna(x) and str(x).strip() != "" else "Available"
+display_df["Owned By"] = display_df["Owned By"].apply(
+    lambda owner: clean_value(owner) if owner_is_taken(owner) else "Available"
 )
 
-display_df["Status Display"] = display_df[owner_col].apply(status_dot)
+display_df["Status"] = display_df["Owned By"].apply(
+    lambda owner: "🟢 Taken" if owner != "Available" else "⚪ Available"
+)
 
-display_df = display_df[[nation_col, "Owned By Display", "Status Display"]]
 display_df.insert(0, "#", range(1, len(display_df) + 1))
 
-display_df = display_df.rename(
-    columns={
-        nation_col: "Team",
-        "Owned By Display": "Owned By",
-        "Status Display": "Status"
-    }
-)
+display_df = display_df[["#", "Nation", "Owned By", "Status"]]
+display_df = display_df.rename(columns={"Nation": "Team"})
 
 search = st.text_input("Search teams or owners", "")
 
@@ -376,6 +397,7 @@ filtered_df = display_df.copy()
 
 if search:
     search_lower = search.lower()
+
     filtered_df = filtered_df[
         filtered_df["Team"].astype(str).str.lower().str.contains(search_lower)
         | filtered_df["Owned By"].astype(str).str.lower().str.contains(search_lower)
