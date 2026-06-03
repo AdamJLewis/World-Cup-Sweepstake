@@ -207,6 +207,10 @@ def render_team_tables(df):
                 background: transparent;
             }}
 
+            .table-spacer {{
+                height: 56px;
+            }}
+
             .table-grid {{
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -285,6 +289,7 @@ def render_team_tables(df):
         </style>
     </head>
     <body>
+        <div class="table-spacer"></div>
         <div class="table-grid">
             <div>{left_table}</div>
             <div>{right_table}</div>
@@ -293,7 +298,7 @@ def render_team_tables(df):
     </html>
     """
 
-    table_height = max(760, int((len(df) / 2) * 38) + 80)
+    table_height = max(816, int((len(df) / 2) * 38) + 136)
     components.html(table_html, height=table_height, scrolling=False)
 
 
@@ -452,8 +457,6 @@ with top_cols[4]:
         unsafe_allow_html=True
     )
 
-
-st.markdown("## 🏆 Team Selections")
 
 search = st.text_input("Search teams or owners", "")
 
