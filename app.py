@@ -19,19 +19,6 @@ PRIZES = {
     "Earliest Red Card": "£30",
 }
 
-NAVY = "#020b1f"
-DEEP_NAVY = "#061b3a"
-GOLD = "#d8a23a"
-BRIGHT_GOLD = "#f4b83f"
-GREEN = "#00c875"
-TEAL = "#00e0c6"
-RED = "#ef3340"
-BLUE = "#005bbb"
-WHITE = "#ffffff"
-SOFT_BG = "#07142c"
-CARD_BG = "#ffffff"
-CARD_BORDER = "#16d68f"
-
 st.set_page_config(
     page_title="World Cup 2026 Sweepstake",
     page_icon="🏆",
@@ -536,6 +523,7 @@ st.markdown(
         color: #ffffff;
         font-size: 13px;
         box-shadow: 0 8px 22px rgba(0, 232, 150, 0.12);
+        margin-top: -20px;
     }
 
     .footer-card h3 {
@@ -557,6 +545,7 @@ st.markdown(
         .footer-card {
             padding: 14px;
             font-size: 12px;
+            margin-top: -30px;
         }
     }
     </style>
@@ -622,7 +611,7 @@ components.html(
 
 
 table_html = build_single_table_html(teams_df)
-table_height = len(teams_df) * 34 + 80
+table_height = len(teams_df) * 30 + 20
 
 components.html(
     table_html,
