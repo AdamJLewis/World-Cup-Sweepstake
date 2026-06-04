@@ -577,7 +577,8 @@ components.html(
 
 
 table_html = build_single_table_html(teams_df)
-table_height = max(1700, len(teams_df) * 36 + 120)
+
+table_height = len(teams_df) * 34 + 80
 
 components.html(
     table_html,
