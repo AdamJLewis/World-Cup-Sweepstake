@@ -11,6 +11,11 @@ GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1GDI1_PquleJILX6fRqbi
 ASSET_FOLDER = "Assets"
 BANNER_FILE = "Page_Banner.png"
 
+TEAMS_TAKEN = 30
+TOTAL_TEAMS = 48
+
+DRAW_MESSAGE = "The draw will be completed before 3PM on Thursday 11th June."
+
 PRIZES = {
     "Tournament Winner": "£100",
     "Tournament Runner Up": "£50",
@@ -18,8 +23,6 @@ PRIZES = {
     "Earliest Yellow Card": "£30",
     "Earliest Red Card": "£30",
 }
-
-DRAW_MESSAGE = "The draw will be completed before 3PM on Thursday 11th June."
 
 st.set_page_config(
     page_title="World Cup 2026 Sweepstake",
@@ -305,7 +308,7 @@ def build_top_cards_html(
     red_sub,
     fav_main,
     fav_sub,
-    taken_teams,
+    teams_taken,
     total_teams
 ):
     prize_rows = ""
@@ -539,7 +542,7 @@ def build_top_cards_html(
                 </div>
 
                 <div class="section-card draw-card">
-                    <div class="draw-number">{taken_teams}/{total_teams}</div>
+                    <div class="draw-number">{teams_taken}/{total_teams}</div>
                     <div class="draw-label">TEAMS TAKEN</div>
                     <div class="draw-message">{DRAW_MESSAGE}</div>
                 </div>
@@ -648,9 +651,6 @@ events_df = extract_table(raw_df, ["Category", "Time", "Team", "Player"])
 teams_df = teams_df[teams_df["Nation"] != ""].copy()
 teams_df = teams_df.reset_index(drop=True)
 
-total_teams = len(teams_df)
-taken_teams = teams_df["Owned By"].apply(lambda value: clean_value(value) != "").sum()
-
 
 st.markdown(
     """
@@ -690,8 +690,8 @@ top_cards_html = build_top_cards_html(
     red_sub,
     fav_main,
     fav_sub,
-    taken_teams,
-    total_teams
+    TEAMS_TAKEN,
+    TOTAL_TEAMS
 )
 
 components.html(
