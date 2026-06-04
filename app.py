@@ -332,11 +332,15 @@ st.markdown(
         padding: 16px;
         box-shadow: 0 6px 18px rgba(15, 35, 75, 0.08);
         border: 1px solid #d9e6f5;
-        height: 170px;
+        height: 185px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         margin-bottom: 10px;
+    }
+
+    .prize-card {
+        height: 185px;
     }
 
     .event-title {
@@ -376,9 +380,9 @@ st.markdown(
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid #e5edf6;
-        padding: 5px 0;
+        padding: 4px 0;
         color: #0a1f44;
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .prize-row:last-child {
@@ -421,6 +425,10 @@ st.markdown(
             margin-bottom: 6px;
         }
 
+        .prize-card {
+            height: 150px;
+        }
+
         .event-title {
             font-size: 10px;
             min-height: 18px;
@@ -439,13 +447,13 @@ st.markdown(
         }
 
         .prize-title {
-            font-size: 14px;
-            margin-bottom: 3px;
+            font-size: 12px;
+            margin-bottom: 2px;
         }
 
         .prize-row {
-            font-size: 10px;
-            padding: 3px 0;
+            font-size: 9px;
+            padding: 2px 0;
         }
 
         .footer-card {
@@ -510,7 +518,7 @@ with top_cols[0]:
 
     st.markdown(
         f"""
-        <div class="section-card">
+        <div class="section-card prize-card">
             <div class="prize-title">PRIZE BREAKDOWN</div>
             {prize_rows}
         </div>
