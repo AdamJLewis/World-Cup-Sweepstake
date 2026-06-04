@@ -478,7 +478,7 @@ st.markdown(
     """
     <style>
     .block-container {
-        padding-top: 0.6rem;
+        padding-top: 1.5rem;
         padding-left: 1rem;
         padding-right: 1rem;
         max-width: 1600px;
@@ -506,7 +506,7 @@ st.markdown(
         .block-container {
             padding-left: 0.45rem;
             padding-right: 0.45rem;
-            padding-top: 0.35rem;
+            padding-top: 3rem;
         }
 
         .footer-card {
@@ -527,6 +527,15 @@ events_df = extract_table(raw_df, ["Category", "Time", "Team", "Player"])
 
 teams_df = teams_df[teams_df["Nation"] != ""].copy()
 teams_df = teams_df.reset_index(drop=True)
+
+
+st.markdown(
+    """
+    <div style="height:60px;"></div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 banner_path = os.path.join(ASSET_FOLDER, BANNER_FILE)
 
