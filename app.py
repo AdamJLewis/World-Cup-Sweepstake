@@ -19,6 +19,8 @@ PRIZES = {
     "Earliest Red Card": "£30",
 }
 
+DRAW_MESSAGE = "The draw will be completed before 3PM on Thursday 11th June."
+
 st.set_page_config(
     page_title="World Cup 2026 Sweepstake",
     page_icon="🏆",
@@ -294,7 +296,18 @@ def build_single_table_html(df):
     """
 
 
-def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main, red_sub, fav_main, fav_sub):
+def build_top_cards_html(
+    goal_main,
+    goal_sub,
+    yellow_main,
+    yellow_sub,
+    red_main,
+    red_sub,
+    fav_main,
+    fav_sub,
+    taken_teams,
+    total_teams
+):
     prize_rows = ""
 
     for prize, amount in PRIZES.items():
@@ -317,7 +330,19 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
 
             .top-layout {{
                 display: grid;
-                grid-template-columns: 1.15fr 1fr 1fr 1fr 1fr;
+                grid-template-columns: 1.15fr 4fr;
+                gap: 16px;
+            }}
+
+            .left-stack {{
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }}
+
+            .event-grid {{
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
                 gap: 16px;
             }}
 
@@ -344,6 +369,35 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
                 width: 100%;
                 height: 5px;
                 background: linear-gradient(90deg, #00c875, #d8a23a, #005bbb);
+            }}
+
+            .draw-card {{
+                min-height: 92px;
+                height: auto;
+            }}
+
+            .draw-number {{
+                color: #00a95c;
+                font-size: 30px;
+                font-weight: 900;
+                text-align: center;
+                line-height: 1;
+            }}
+
+            .draw-label {{
+                color: #061b3a;
+                font-size: 12px;
+                font-weight: 900;
+                text-align: center;
+                margin-top: 6px;
+            }}
+
+            .draw-message {{
+                color: #07142c;
+                font-size: 12px;
+                text-align: center;
+                margin-top: 7px;
+                line-height: 1.25;
             }}
 
             .event-title {{
@@ -401,12 +455,17 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
 
             @media (max-width: 900px) {{
                 .top-layout {{
-                    grid-template-columns: 1fr 1fr;
+                    grid-template-columns: 1fr;
                     gap: 8px;
                 }}
 
-                .prize-card {{
-                    grid-column: 1 / 3;
+                .left-stack {{
+                    gap: 8px;
+                }}
+
+                .event-grid {{
+                    grid-template-columns: 1fr 1fr;
+                    gap: 8px;
                 }}
 
                 .section-card {{
@@ -415,9 +474,28 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
                     padding: 10px;
                 }}
 
-                .prize-card .section-card {{
+                .prize-card {{
                     height: auto;
                     min-height: 122px;
+                }}
+
+                .draw-card {{
+                    min-height: 94px;
+                    height: auto;
+                }}
+
+                .draw-number {{
+                    font-size: 25px;
+                }}
+
+                .draw-label {{
+                    font-size: 10px;
+                    margin-top: 4px;
+                }}
+
+                .draw-message {{
+                    font-size: 10px;
+                    margin-top: 5px;
                 }}
 
                 .event-title {{
@@ -454,35 +532,43 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
     <body>
         <div class="top-layout">
 
-            <div class="prize-card">
-                <div class="section-card">
+            <div class="left-stack">
+                <div class="section-card prize-card">
                     <div class="prize-title">PRIZE BREAKDOWN</div>
                     {prize_rows}
                 </div>
+
+                <div class="section-card draw-card">
+                    <div class="draw-number">{taken_teams}/{total_teams}</div>
+                    <div class="draw-label">TEAMS TAKEN</div>
+                    <div class="draw-message">{DRAW_MESSAGE}</div>
+                </div>
             </div>
 
-            <div class="section-card">
-                <div class="event-title">FASTEST GOAL</div>
-                <div class="event-main" style="color:#00a95c;">{goal_main}</div>
-                <div class="event-sub">{goal_sub}</div>
-            </div>
+            <div class="event-grid">
+                <div class="section-card">
+                    <div class="event-title">FASTEST GOAL</div>
+                    <div class="event-main" style="color:#00a95c;">{goal_main}</div>
+                    <div class="event-sub">{goal_sub}</div>
+                </div>
 
-            <div class="section-card">
-                <div class="event-title">EARLIEST YELLOW CARD</div>
-                <div class="event-main" style="color:#d8a23a;">{yellow_main}</div>
-                <div class="event-sub">{yellow_sub}</div>
-            </div>
+                <div class="section-card">
+                    <div class="event-title">EARLIEST YELLOW CARD</div>
+                    <div class="event-main" style="color:#d8a23a;">{yellow_main}</div>
+                    <div class="event-sub">{yellow_sub}</div>
+                </div>
 
-            <div class="section-card">
-                <div class="event-title">EARLIEST RED CARD</div>
-                <div class="event-main" style="color:#ef3340;">{red_main}</div>
-                <div class="event-sub">{red_sub}</div>
-            </div>
+                <div class="section-card">
+                    <div class="event-title">EARLIEST RED CARD</div>
+                    <div class="event-main" style="color:#ef3340;">{red_main}</div>
+                    <div class="event-sub">{red_sub}</div>
+                </div>
 
-            <div class="section-card">
-                <div class="event-title">TOURNAMENT FAVOURITE</div>
-                <div class="event-main" style="color:#005bbb;">{fav_main}</div>
-                <div class="event-sub">{fav_sub}</div>
+                <div class="section-card">
+                    <div class="event-title">TOURNAMENT FAVOURITE</div>
+                    <div class="event-main" style="color:#005bbb;">{fav_main}</div>
+                    <div class="event-sub">{fav_sub}</div>
+                </div>
             </div>
 
         </div>
@@ -562,6 +648,9 @@ events_df = extract_table(raw_df, ["Category", "Time", "Team", "Player"])
 teams_df = teams_df[teams_df["Nation"] != ""].copy()
 teams_df = teams_df.reset_index(drop=True)
 
+total_teams = len(teams_df)
+taken_teams = teams_df["Owned By"].apply(lambda value: clean_value(value) != "").sum()
+
 
 st.markdown(
     """
@@ -600,12 +689,14 @@ top_cards_html = build_top_cards_html(
     red_main,
     red_sub,
     fav_main,
-    fav_sub
+    fav_sub,
+    taken_teams,
+    total_teams
 )
 
 components.html(
     top_cards_html,
-    height=390,
+    height=500,
     scrolling=False
 )
 
