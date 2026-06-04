@@ -531,7 +531,7 @@ teams_df = teams_df.reset_index(drop=True)
 
 st.markdown(
     """
-    <div style="height:25px;"></div>
+    <div style="height:15px;"></div>
     """,
     unsafe_allow_html=True
 )
