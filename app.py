@@ -28,7 +28,6 @@ st.set_page_config(
 
 def get_google_sheet_csv_url(sheet_url):
     match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
-
     if not match:
         st.error("Could not read the Google Sheet ID.")
         st.stop()
@@ -59,7 +58,6 @@ def find_header_row(raw_df, required_headers):
 
     for row_index, row in raw_df.iterrows():
         row_values = [clean_value(v).lower().replace(" ", "") for v in row.tolist()]
-
         if all(header in row_values for header in required_headers_clean):
             return row_index, row_values
 
@@ -153,7 +151,7 @@ def status_html(status):
     return '<span class="status active">● Active</span>'
 
 
-def build_half_table_html(df):
+def build_table_html(df):
     rows_html = ""
 
     for index, row in df.iterrows():
@@ -194,9 +192,6 @@ def render_team_tables(df):
     left_df = df.iloc[:midpoint].copy()
     right_df = df.iloc[midpoint:].copy()
 
-    left_table = build_half_table_html(left_df)
-    right_table = build_half_table_html(right_df)
-
     table_html = f"""
     <html>
     <head>
@@ -208,13 +203,13 @@ def render_team_tables(df):
             }}
 
             .table-spacer {{
-                height: 56px;
+                height: 26px;
             }}
 
             .table-grid {{
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 20px;
+                gap: 16px;
             }}
 
             .team-table {{
@@ -224,20 +219,20 @@ def render_team_tables(df):
                 border-radius: 14px;
                 overflow: hidden;
                 border: 1px solid #d9e6f5;
-                font-size: 14px;
+                font-size: 13px;
             }}
 
             .team-table th {{
                 background: #061b3a;
                 color: white;
                 text-align: left;
-                padding: 10px 12px;
-                font-size: 13px;
+                padding: 9px 9px;
+                font-size: 12px;
                 text-transform: uppercase;
             }}
 
             .team-table td {{
-                padding: 9px 12px;
+                padding: 8px 9px;
                 border-bottom: 1px solid #e5edf6;
                 color: #0a1f44;
                 vertical-align: middle;
@@ -248,7 +243,7 @@ def render_team_tables(df):
             }}
 
             .number-cell {{
-                width: 42px;
+                width: 32px;
                 text-align: center;
                 font-weight: 700;
             }}
@@ -256,16 +251,17 @@ def render_team_tables(df):
             .team-cell {{
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 8px;
                 font-weight: 600;
             }}
 
             .flag-img {{
-                width: 24px;
-                height: 16px;
+                width: 22px;
+                height: 15px;
                 object-fit: cover;
                 border-radius: 2px;
                 box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
+                flex-shrink: 0;
             }}
 
             .status {{
@@ -282,8 +278,39 @@ def render_team_tables(df):
             }}
 
             @media (max-width: 900px) {{
+                .table-spacer {{
+                    height: 18px;
+                }}
+
                 .table-grid {{
                     grid-template-columns: 1fr;
+                    gap: 12px;
+                }}
+
+                .team-table {{
+                    font-size: 12px;
+                }}
+
+                .team-table th {{
+                    padding: 8px 6px;
+                    font-size: 10px;
+                }}
+
+                .team-table td {{
+                    padding: 7px 6px;
+                }}
+
+                .number-cell {{
+                    width: 24px;
+                }}
+
+                .flag-img {{
+                    width: 20px;
+                    height: 14px;
+                }}
+
+                .team-cell {{
+                    gap: 6px;
                 }}
             }}
         </style>
@@ -291,65 +318,78 @@ def render_team_tables(df):
     <body>
         <div class="table-spacer"></div>
         <div class="table-grid">
-            <div>{left_table}</div>
-            <div>{right_table}</div>
+            <div>{build_table_html(left_df)}</div>
+            <div>{build_table_html(right_df)}</div>
         </div>
     </body>
     </html>
     """
 
-    table_height = max(816, int((len(df) / 2) * 38) + 136)
+    table_height = max(1080, len(df) * 36 + 120)
     components.html(table_html, height=table_height, scrolling=False)
 
 
 st.markdown(
     """
     <style>
+    .block-container {
+        padding-top: 0.6rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        max-width: 1600px;
+    }
+
     .stApp {
         background: linear-gradient(180deg, #f3f7fb 0%, #ffffff 100%);
     }
 
+    .banner-wrap img {
+        border-radius: 12px;
+        margin-bottom: 12px;
+    }
+
     .section-card {
         background: white;
-        border-radius: 18px;
-        padding: 20px;
-        box-shadow: 0 8px 24px rgba(15, 35, 75, 0.08);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 6px 18px rgba(15, 35, 75, 0.08);
         border: 1px solid #d9e6f5;
-        height: 210px;
+        height: 170px;
         display: flex;
         flex-direction: column;
         justify-content: center;
+        margin-bottom: 10px;
     }
 
     .event-title {
         color: #0a1f44;
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 900;
         text-align: center;
-        min-height: 32px;
+        min-height: 28px;
     }
 
     .event-main {
-        font-size: 34px;
+        font-size: 30px;
         font-weight: 900;
         text-align: center;
-        margin-top: 6px;
-        min-height: 48px;
+        margin-top: 4px;
+        min-height: 40px;
     }
 
     .event-sub {
         color: #0a1f44;
-        font-size: 14px;
+        font-size: 13px;
         text-align: center;
-        margin-top: 6px;
-        min-height: 24px;
+        margin-top: 4px;
+        min-height: 20px;
     }
 
     .prize-title {
         text-align: center;
         color: #0a1f44;
-        margin: 0 0 8px 0;
-        font-size: 21px;
+        margin: 0 0 6px 0;
+        font-size: 17px;
         font-weight: 900;
     }
 
@@ -358,9 +398,9 @@ st.markdown(
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid #e5edf6;
-        padding: 6px 0;
+        padding: 5px 0;
         color: #0a1f44;
-        font-size: 13px;
+        font-size: 12px;
     }
 
     .prize-row:last-child {
@@ -374,10 +414,71 @@ st.markdown(
 
     .footer-card {
         background: linear-gradient(90deg, #eef5fc, #ffffff);
-        border-radius: 18px;
-        padding: 24px;
+        border-radius: 16px;
+        padding: 18px;
         border: 1px solid #d9e6f5;
         color: #0a1f44;
+        font-size: 13px;
+    }
+
+    div[data-testid="stTextInput"] {
+        margin-top: 0.4rem;
+    }
+
+    div[data-testid="stRadio"] {
+        margin-bottom: 0.2rem;
+    }
+
+    @media (max-width: 900px) {
+        .block-container {
+            padding-left: 0.45rem;
+            padding-right: 0.45rem;
+            padding-top: 0.35rem;
+        }
+
+        .section-card {
+            height: 118px;
+            border-radius: 13px;
+            padding: 10px;
+            margin-bottom: 6px;
+        }
+
+        .event-title {
+            font-size: 10px;
+            min-height: 18px;
+        }
+
+        .event-main {
+            font-size: 23px;
+            min-height: 30px;
+            margin-top: 2px;
+        }
+
+        .event-sub {
+            font-size: 11px;
+            min-height: 16px;
+            margin-top: 2px;
+        }
+
+        .prize-title {
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
+        .prize-row {
+            font-size: 10px;
+            padding: 3px 0;
+        }
+
+        .footer-card {
+            padding: 14px;
+            font-size: 12px;
+        }
+
+        div[data-testid="stTextInput"] label,
+        div[data-testid="stRadio"] label {
+            font-size: 12px;
+        }
     }
     </style>
     """,
@@ -393,11 +494,13 @@ events_df = extract_table(raw_df, ["Category", "Time", "Team", "Player"])
 teams_df = teams_df[teams_df["Nation"] != ""].copy()
 teams_df = teams_df.reset_index(drop=True)
 
-
 banner_path = os.path.join(ASSET_FOLDER, BANNER_FILE)
 
 if os.path.exists(banner_path):
-    st.image(Image.open(banner_path), use_container_width=True)
+    banner = Image.open(banner_path)
+    st.markdown('<div class="banner-wrap">', unsafe_allow_html=True)
+    st.image(banner, use_container_width=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 else:
     st.title("🏆 World Cup 2026 Sweepstake")
 
@@ -489,7 +592,6 @@ if filter_option == "Eliminated":
 filtered_df = filtered_df.reset_index(drop=True)
 
 render_team_tables(filtered_df)
-
 
 st.markdown(
     """
