@@ -19,6 +19,19 @@ PRIZES = {
     "Earliest Red Card": "£30",
 }
 
+NAVY = "#020b1f"
+DEEP_NAVY = "#061b3a"
+GOLD = "#d8a23a"
+BRIGHT_GOLD = "#f4b83f"
+GREEN = "#00c875"
+TEAL = "#00e0c6"
+RED = "#ef3340"
+BLUE = "#005bbb"
+WHITE = "#ffffff"
+SOFT_BG = "#07142c"
+CARD_BG = "#ffffff"
+CARD_BORDER = "#16d68f"
+
 st.set_page_config(
     page_title="World Cup 2026 Sweepstake",
     page_icon="🏆",
@@ -180,44 +193,47 @@ def build_single_table_html(df):
             .team-table {{
                 width: 100%;
                 border-collapse: collapse;
-                background: white;
+                background: #ffffff;
                 border-radius: 14px;
                 overflow: hidden;
-                border: 1px solid #d9e6f5;
+                border: 1px solid #0fd084;
                 font-size: 13px;
+                box-shadow: 0 8px 22px rgba(0, 232, 150, 0.12);
             }}
 
             .team-table th {{
-                background: #061b3a;
-                color: white;
+                background: linear-gradient(90deg, #020b1f, #06244a);
+                color: #ffffff;
                 text-align: left;
                 padding: 10px;
                 font-size: 12px;
                 text-transform: uppercase;
+                border-bottom: 2px solid #d8a23a;
             }}
 
             .team-table td {{
                 padding: 9px 10px;
-                border-bottom: 1px solid #e5edf6;
-                color: #0a1f44;
+                border-bottom: 1px solid #dce8ef;
+                color: #07142c;
                 vertical-align: middle;
             }}
 
             .team-table tr:nth-child(even) {{
-                background: #f8fbff;
+                background: #f2fff9;
             }}
 
             .number-cell {{
                 width: 38px;
                 text-align: center;
                 font-weight: 700;
+                color: #061b3a;
             }}
 
             .team-cell {{
                 display: flex;
                 align-items: center;
                 gap: 9px;
-                font-weight: 600;
+                font-weight: 700;
             }}
 
             .flag-img {{
@@ -230,16 +246,16 @@ def build_single_table_html(df):
             }}
 
             .status {{
-                font-weight: 800;
+                font-weight: 900;
                 white-space: nowrap;
             }}
 
             .active {{
-                color: #0a9d4f;
+                color: #00a95c;
             }}
 
             .eliminated {{
-                color: #e33b2e;
+                color: #ef3340;
             }}
 
             @media (max-width: 900px) {{
@@ -319,24 +335,37 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
             }}
 
             .section-card {{
-                background: white;
+                background: linear-gradient(180deg, #ffffff 0%, #f6fff9 100%);
                 border-radius: 16px;
                 padding: 16px;
-                box-shadow: 0 6px 18px rgba(15, 35, 75, 0.08);
-                border: 1px solid #d9e6f5;
+                box-shadow: 0 8px 24px rgba(0, 232, 150, 0.12);
+                border: 1px solid #0fd084;
                 height: 170px;
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
+                position: relative;
+                overflow: hidden;
+            }}
+
+            .section-card::before {{
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 5px;
+                background: linear-gradient(90deg, #00c875, #d8a23a, #005bbb);
             }}
 
             .event-title {{
-                color: #0a1f44;
+                color: #061b3a;
                 font-size: 12px;
                 font-weight: 900;
                 text-align: center;
                 min-height: 28px;
+                letter-spacing: 0.3px;
             }}
 
             .event-main {{
@@ -348,7 +377,7 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
             }}
 
             .event-sub {{
-                color: #0a1f44;
+                color: #07142c;
                 font-size: 13px;
                 text-align: center;
                 margin-top: 4px;
@@ -357,19 +386,20 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
 
             .prize-title {{
                 text-align: center;
-                color: #0a1f44;
+                color: #061b3a;
                 margin: 0 0 6px 0;
                 font-size: 17px;
                 font-weight: 900;
+                letter-spacing: 0.3px;
             }}
 
             .prize-row {{
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                border-bottom: 1px solid #e5edf6;
+                border-bottom: 1px solid #dce8ef;
                 padding: 5px 0;
-                color: #0a1f44;
+                color: #07142c;
                 font-size: 12px;
             }}
 
@@ -379,7 +409,7 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
 
             .prize-amount {{
                 font-weight: 900;
-                color: #0a1f44;
+                color: #d8a23a;
             }}
 
             @media (max-width: 900px) {{
@@ -446,25 +476,25 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
 
             <div class="section-card">
                 <div class="event-title">FASTEST GOAL</div>
-                <div class="event-main" style="color:#0a9d4f;">{goal_main}</div>
+                <div class="event-main" style="color:#00a95c;">{goal_main}</div>
                 <div class="event-sub">{goal_sub}</div>
             </div>
 
             <div class="section-card">
                 <div class="event-title">EARLIEST YELLOW CARD</div>
-                <div class="event-main" style="color:#f2a900;">{yellow_main}</div>
+                <div class="event-main" style="color:#d8a23a;">{yellow_main}</div>
                 <div class="event-sub">{yellow_sub}</div>
             </div>
 
             <div class="section-card">
                 <div class="event-title">EARLIEST RED CARD</div>
-                <div class="event-main" style="color:#e33b2e;">{red_main}</div>
+                <div class="event-main" style="color:#ef3340;">{red_main}</div>
                 <div class="event-sub">{red_sub}</div>
             </div>
 
             <div class="section-card">
                 <div class="event-title">TOURNAMENT FAVOURITE</div>
-                <div class="event-main" style="color:#0066cc;">{fav_main}</div>
+                <div class="event-main" style="color:#005bbb;">{fav_main}</div>
                 <div class="event-sub">{fav_sub}</div>
             </div>
 
@@ -478,35 +508,50 @@ st.markdown(
     """
     <style>
     .block-container {
-        padding-top: 1.5rem;
+        padding-top: 1rem;
         padding-left: 1rem;
         padding-right: 1rem;
         max-width: 1600px;
     }
 
     .stApp {
-        background: linear-gradient(180deg, #f3f7fb 0%, #ffffff 100%);
+        background:
+            radial-gradient(circle at top left, rgba(0, 200, 117, 0.22), transparent 28%),
+            radial-gradient(circle at top right, rgba(216, 162, 58, 0.20), transparent 26%),
+            linear-gradient(180deg, #07142c 0%, #0b1831 18%, #f4fff8 54%, #ffffff 100%);
     }
 
     .banner-wrap img {
-        border-radius: 12px;
+        border-radius: 14px;
         margin-bottom: 12px;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.35);
+        border: 1px solid rgba(0, 232, 150, 0.45);
     }
 
     .footer-card {
-        background: linear-gradient(90deg, #eef5fc, #ffffff);
+        background: linear-gradient(90deg, #061b3a, #09284d);
         border-radius: 16px;
         padding: 18px;
-        border: 1px solid #d9e6f5;
-        color: #0a1f44;
+        border: 1px solid #0fd084;
+        color: #ffffff;
         font-size: 13px;
+        box-shadow: 0 8px 22px rgba(0, 232, 150, 0.12);
+    }
+
+    .footer-card h3 {
+        color: #f4b83f;
+        margin-top: 0;
+    }
+
+    .footer-card p {
+        color: #ffffff;
     }
 
     @media (max-width: 900px) {
         .block-container {
             padding-left: 0.45rem;
             padding-right: 0.45rem;
-            padding-top: 3rem;
+            padding-top: 1rem;
         }
 
         .footer-card {
@@ -531,7 +576,7 @@ teams_df = teams_df.reset_index(drop=True)
 
 st.markdown(
     """
-    <div style="height:15px;"></div>
+    <div style="height:30px;"></div>
     """,
     unsafe_allow_html=True
 )
@@ -577,7 +622,6 @@ components.html(
 
 
 table_html = build_single_table_html(teams_df)
-
 table_height = len(teams_df) * 34 + 80
 
 components.html(
