@@ -28,7 +28,6 @@ st.set_page_config(
 
 def get_google_sheet_csv_url(sheet_url):
     match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
-
     if not match:
         st.error("Could not read the Google Sheet ID.")
         st.stop()
@@ -59,7 +58,6 @@ def find_header_row(raw_df, required_headers):
 
     for row_index, row in raw_df.iterrows():
         row_values = [clean_value(v).lower().replace(" ", "") for v in row.tolist()]
-
         if all(header in row_values for header in required_headers_clean):
             return row_index, row_values
 
@@ -115,13 +113,10 @@ def get_event(events_df, category):
 def event_line(time_value, team, player):
     if time_value and team and player:
         return f"{time_value}’", f"{player} ({team})"
-
     if team and player:
         return team, player
-
     if team:
         return team, ""
-
     return "Awaiting result", ""
 
 
@@ -180,10 +175,6 @@ def build_single_table_html(df):
                 margin: 0;
                 font-family: Arial, sans-serif;
                 background: transparent;
-            }}
-
-            .table-spacer {{
-                height: 18px;
             }}
 
             .team-table {{
@@ -252,10 +243,6 @@ def build_single_table_html(df):
             }}
 
             @media (max-width: 900px) {{
-                .table-spacer {{
-                    height: 12px;
-                }}
-
                 .team-table {{
                     font-size: 11px;
                 }}
@@ -286,8 +273,6 @@ def build_single_table_html(df):
     </head>
 
     <body>
-        <div class="table-spacer"></div>
-
         <table class="team-table">
             <thead>
                 <tr>
@@ -297,11 +282,193 @@ def build_single_table_html(df):
                     <th>Status</th>
                 </tr>
             </thead>
-
             <tbody>
                 {rows_html}
             </tbody>
         </table>
+    </body>
+    </html>
+    """
+
+
+def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main, red_sub, fav_main, fav_sub):
+    prize_rows = ""
+
+    for prize, amount in PRIZES.items():
+        prize_rows += f"""
+        <div class="prize-row">
+            <span>{prize}</span>
+            <span class="prize-amount">{amount}</span>
+        </div>
+        """
+
+    return f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background: transparent;
+            }}
+
+            .top-layout {{
+                display: grid;
+                grid-template-columns: 1.15fr 1fr 1fr 1fr 1fr;
+                gap: 16px;
+            }}
+
+            .section-card {{
+                background: white;
+                border-radius: 16px;
+                padding: 16px;
+                box-shadow: 0 6px 18px rgba(15, 35, 75, 0.08);
+                border: 1px solid #d9e6f5;
+                height: 170px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }}
+
+            .event-title {{
+                color: #0a1f44;
+                font-size: 12px;
+                font-weight: 900;
+                text-align: center;
+                min-height: 28px;
+            }}
+
+            .event-main {{
+                font-size: 30px;
+                font-weight: 900;
+                text-align: center;
+                margin-top: 4px;
+                min-height: 40px;
+            }}
+
+            .event-sub {{
+                color: #0a1f44;
+                font-size: 13px;
+                text-align: center;
+                margin-top: 4px;
+                min-height: 20px;
+            }}
+
+            .prize-title {{
+                text-align: center;
+                color: #0a1f44;
+                margin: 0 0 6px 0;
+                font-size: 17px;
+                font-weight: 900;
+            }}
+
+            .prize-row {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #e5edf6;
+                padding: 5px 0;
+                color: #0a1f44;
+                font-size: 12px;
+            }}
+
+            .prize-row:last-child {{
+                border-bottom: none;
+            }}
+
+            .prize-amount {{
+                font-weight: 900;
+                color: #0a1f44;
+            }}
+
+            @media (max-width: 900px) {{
+                .top-layout {{
+                    grid-template-columns: 1fr 1fr;
+                    gap: 8px;
+                }}
+
+                .prize-card {{
+                    grid-column: 1 / 3;
+                }}
+
+                .section-card {{
+                    height: 108px;
+                    border-radius: 13px;
+                    padding: 10px;
+                }}
+
+                .prize-card .section-card {{
+                    height: auto;
+                    min-height: 118px;
+                }}
+
+                .event-title {{
+                    font-size: 9px;
+                    min-height: 16px;
+                    line-height: 1.15;
+                }}
+
+                .event-main {{
+                    font-size: 22px;
+                    min-height: 28px;
+                    margin-top: 2px;
+                }}
+
+                .event-sub {{
+                    font-size: 10px;
+                    min-height: 14px;
+                    margin-top: 1px;
+                }}
+
+                .prize-title {{
+                    font-size: 14px;
+                    margin-bottom: 3px;
+                }}
+
+                .prize-row {{
+                    font-size: 10px;
+                    padding: 3px 0;
+                }}
+            }}
+        </style>
+    </head>
+
+    <body>
+        <div class="top-layout">
+
+            <div class="prize-card">
+                <div class="section-card">
+                    <div class="prize-title">PRIZE BREAKDOWN</div>
+                    {prize_rows}
+                </div>
+            </div>
+
+            <div class="section-card">
+                <div class="event-title">FASTEST GOAL</div>
+                <div class="event-main" style="color:#0a9d4f;">{goal_main}</div>
+                <div class="event-sub">{goal_sub}</div>
+            </div>
+
+            <div class="section-card">
+                <div class="event-title">EARLIEST YELLOW CARD</div>
+                <div class="event-main" style="color:#f2a900;">{yellow_main}</div>
+                <div class="event-sub">{yellow_sub}</div>
+            </div>
+
+            <div class="section-card">
+                <div class="event-title">EARLIEST RED CARD</div>
+                <div class="event-main" style="color:#e33b2e;">{red_main}</div>
+                <div class="event-sub">{red_sub}</div>
+            </div>
+
+            <div class="section-card">
+                <div class="event-title">TOURNAMENT FAVOURITE</div>
+                <div class="event-main" style="color:#0066cc;">{fav_main}</div>
+                <div class="event-sub">{fav_sub}</div>
+            </div>
+
+        </div>
     </body>
     </html>
     """
@@ -326,76 +493,6 @@ st.markdown(
         margin-bottom: 12px;
     }
 
-    .top-layout {
-        display: grid;
-        grid-template-columns: 1.15fr 1fr 1fr 1fr 1fr;
-        gap: 16px;
-        margin-bottom: 10px;
-    }
-
-    .section-card {
-        background: white;
-        border-radius: 16px;
-        padding: 16px;
-        box-shadow: 0 6px 18px rgba(15, 35, 75, 0.08);
-        border: 1px solid #d9e6f5;
-        height: 170px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .event-title {
-        color: #0a1f44;
-        font-size: 12px;
-        font-weight: 900;
-        text-align: center;
-        min-height: 28px;
-    }
-
-    .event-main {
-        font-size: 30px;
-        font-weight: 900;
-        text-align: center;
-        margin-top: 4px;
-        min-height: 40px;
-    }
-
-    .event-sub {
-        color: #0a1f44;
-        font-size: 13px;
-        text-align: center;
-        margin-top: 4px;
-        min-height: 20px;
-    }
-
-    .prize-title {
-        text-align: center;
-        color: #0a1f44;
-        margin: 0 0 6px 0;
-        font-size: 17px;
-        font-weight: 900;
-    }
-
-    .prize-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-bottom: 1px solid #e5edf6;
-        padding: 5px 0;
-        color: #0a1f44;
-        font-size: 12px;
-    }
-
-    .prize-row:last-child {
-        border-bottom: none;
-    }
-
-    .prize-amount {
-        font-weight: 900;
-        color: #0a1f44;
-    }
-
     .footer-card {
         background: linear-gradient(90deg, #eef5fc, #ffffff);
         border-radius: 16px;
@@ -418,54 +515,6 @@ st.markdown(
             padding-left: 0.45rem;
             padding-right: 0.45rem;
             padding-top: 0.35rem;
-        }
-
-        .top-layout {
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-
-        .prize-card {
-            grid-column: 1 / 3;
-        }
-
-        .section-card {
-            height: 108px;
-            border-radius: 13px;
-            padding: 10px;
-        }
-
-        .event-title {
-            font-size: 9px;
-            min-height: 16px;
-            line-height: 1.15;
-        }
-
-        .event-main {
-            font-size: 22px;
-            min-height: 28px;
-            margin-top: 2px;
-        }
-
-        .event-sub {
-            font-size: 10px;
-            min-height: 14px;
-            margin-top: 1px;
-        }
-
-        .prize-card .section-card {
-            height: auto;
-            min-height: 118px;
-        }
-
-        .prize-title {
-            font-size: 14px;
-            margin-bottom: 3px;
-        }
-
-        .prize-row {
-            font-size: 10px;
-            padding: 3px 0;
         }
 
         .footer-card {
@@ -513,62 +562,22 @@ yellow_main, yellow_sub = event_line(yellow_time, yellow_team, yellow_player)
 red_main, red_sub = event_line(red_time, red_team, red_player)
 fav_main, fav_sub = event_line("", favourite_team, favourite_player)
 
-prize_rows = ""
+top_cards_html = build_top_cards_html(
+    goal_main,
+    goal_sub,
+    yellow_main,
+    yellow_sub,
+    red_main,
+    red_sub,
+    fav_main,
+    fav_sub
+)
 
-for prize, amount in PRIZES.items():
-    prize_rows += f"""
-    <div class="prize-row">
-        <span>{prize}</span>
-        <span class="prize-amount">{amount}</span>
-    </div>
-    """
-
-top_html = f"""
-<div class="top-layout">
-
-    <div class="prize-card">
-        <div class="section-card">
-            <div class="prize-title">PRIZE BREAKDOWN</div>
-            {prize_rows}
-        </div>
-    </div>
-
-    <div>
-        <div class="section-card">
-            <div class="event-title">FASTEST GOAL</div>
-            <div class="event-main" style="color:#0a9d4f;">{goal_main}</div>
-            <div class="event-sub">{goal_sub}</div>
-        </div>
-    </div>
-
-    <div>
-        <div class="section-card">
-            <div class="event-title">EARLIEST YELLOW CARD</div>
-            <div class="event-main" style="color:#f2a900;">{yellow_main}</div>
-            <div class="event-sub">{yellow_sub}</div>
-        </div>
-    </div>
-
-    <div>
-        <div class="section-card">
-            <div class="event-title">EARLIEST RED CARD</div>
-            <div class="event-main" style="color:#e33b2e;">{red_main}</div>
-            <div class="event-sub">{red_sub}</div>
-        </div>
-    </div>
-
-    <div>
-        <div class="section-card">
-            <div class="event-title">TOURNAMENT FAVOURITE</div>
-            <div class="event-main" style="color:#0066cc;">{fav_main}</div>
-            <div class="event-sub">{fav_sub}</div>
-        </div>
-    </div>
-
-</div>
-"""
-
-st.markdown(top_html, unsafe_allow_html=True)
+components.html(
+    top_cards_html,
+    height=360,
+    scrolling=False
+)
 
 
 search = st.text_input("Search teams or owners", "")
