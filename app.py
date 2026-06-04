@@ -400,7 +400,7 @@ def build_top_cards_html(goal_main, goal_sub, yellow_main, yellow_sub, red_main,
 
                 .prize-card .section-card {{
                     height: auto;
-                    min-height: 118px;
+                    min-height: 122px;
                 }}
 
                 .event-title {{
@@ -502,14 +502,6 @@ st.markdown(
         font-size: 13px;
     }
 
-    div[data-testid="stTextInput"] {
-        margin-top: 0.4rem;
-    }
-
-    div[data-testid="stRadio"] {
-        margin-bottom: 0.2rem;
-    }
-
     @media (max-width: 900px) {
         .block-container {
             padding-left: 0.45rem;
@@ -519,11 +511,6 @@ st.markdown(
 
         .footer-card {
             padding: 14px;
-            font-size: 12px;
-        }
-
-        div[data-testid="stTextInput"] label,
-        div[data-testid="stRadio"] label {
             font-size: 12px;
         }
     }
@@ -575,43 +562,13 @@ top_cards_html = build_top_cards_html(
 
 components.html(
     top_cards_html,
-    height=360,
+    height=390,
     scrolling=False
 )
 
 
-search = st.text_input("Search teams or owners", "")
-
-filter_option = st.radio(
-    "Filter",
-    ["All", "Active", "Eliminated"],
-    horizontal=True
-)
-
-filtered_df = teams_df.copy()
-
-if search:
-    search_lower = search.lower()
-
-    filtered_df = filtered_df[
-        filtered_df["Nation"].astype(str).str.lower().str.contains(search_lower)
-        | filtered_df["Owned By"].astype(str).str.lower().str.contains(search_lower)
-    ]
-
-if filter_option == "Active":
-    filtered_df = filtered_df[
-        filtered_df["Status"].astype(str).str.lower().str.strip() == "active"
-    ]
-
-if filter_option == "Eliminated":
-    filtered_df = filtered_df[
-        filtered_df["Status"].astype(str).str.lower().str.strip() == "eliminated"
-    ]
-
-filtered_df = filtered_df.reset_index(drop=True)
-
-table_html = build_single_table_html(filtered_df)
-table_height = max(1700, len(filtered_df) * 36 + 120)
+table_html = build_single_table_html(teams_df)
+table_height = max(1700, len(teams_df) * 36 + 120)
 
 components.html(
     table_html,
