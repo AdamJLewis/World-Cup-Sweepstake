@@ -28,6 +28,7 @@ st.set_page_config(
 
 def get_google_sheet_csv_url(sheet_url):
     match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
+
     if not match:
         st.error("Could not read the Google Sheet ID.")
         st.stop()
@@ -58,6 +59,7 @@ def find_header_row(raw_df, required_headers):
 
     for row_index, row in raw_df.iterrows():
         row_values = [clean_value(v).lower().replace(" ", "") for v in row.tolist()]
+
         if all(header in row_values for header in required_headers_clean):
             return row_index, row_values
 
@@ -151,7 +153,7 @@ def status_html(status):
     return '<span class="status active">● Active</span>'
 
 
-def build_table_html(df):
+def build_single_table_html(df):
     rows_html = ""
 
     for index, row in df.iterrows():
@@ -171,28 +173,6 @@ def build_table_html(df):
         """
 
     return f"""
-    <table class="team-table">
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Team</th>
-                <th>Owned By</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            {rows_html}
-        </tbody>
-    </table>
-    """
-
-
-def render_team_tables(df):
-    midpoint = (len(df) + 1) // 2
-    left_df = df.iloc[:midpoint].copy()
-    right_df = df.iloc[midpoint:].copy()
-
-    table_html = f"""
     <html>
     <head>
         <style>
@@ -203,13 +183,7 @@ def render_team_tables(df):
             }}
 
             .table-spacer {{
-                height: 26px;
-            }}
-
-            .table-grid {{
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 16px;
+                height: 18px;
             }}
 
             .team-table {{
@@ -226,13 +200,13 @@ def render_team_tables(df):
                 background: #061b3a;
                 color: white;
                 text-align: left;
-                padding: 9px 9px;
+                padding: 10px;
                 font-size: 12px;
                 text-transform: uppercase;
             }}
 
             .team-table td {{
-                padding: 8px 9px;
+                padding: 9px 10px;
                 border-bottom: 1px solid #e5edf6;
                 color: #0a1f44;
                 vertical-align: middle;
@@ -243,7 +217,7 @@ def render_team_tables(df):
             }}
 
             .number-cell {{
-                width: 32px;
+                width: 38px;
                 text-align: center;
                 font-weight: 700;
             }}
@@ -251,13 +225,13 @@ def render_team_tables(df):
             .team-cell {{
                 display: flex;
                 align-items: center;
-                gap: 8px;
+                gap: 9px;
                 font-weight: 600;
             }}
 
             .flag-img {{
-                width: 22px;
-                height: 15px;
+                width: 24px;
+                height: 16px;
                 object-fit: cover;
                 border-radius: 2px;
                 box-shadow: 0 0 0 1px rgba(0,0,0,0.12);
@@ -279,54 +253,58 @@ def render_team_tables(df):
 
             @media (max-width: 900px) {{
                 .table-spacer {{
-                    height: 18px;
-                }}
-
-                .table-grid {{
-                    grid-template-columns: 1fr;
-                    gap: 12px;
+                    height: 12px;
                 }}
 
                 .team-table {{
-                    font-size: 12px;
+                    font-size: 11px;
                 }}
 
                 .team-table th {{
-                    padding: 8px 6px;
-                    font-size: 10px;
+                    padding: 8px 5px;
+                    font-size: 9px;
                 }}
 
                 .team-table td {{
-                    padding: 7px 6px;
+                    padding: 7px 5px;
                 }}
 
                 .number-cell {{
-                    width: 24px;
-                }}
-
-                .flag-img {{
-                    width: 20px;
-                    height: 14px;
+                    width: 22px;
                 }}
 
                 .team-cell {{
-                    gap: 6px;
+                    gap: 5px;
+                }}
+
+                .flag-img {{
+                    width: 19px;
+                    height: 13px;
                 }}
             }}
         </style>
     </head>
+
     <body>
         <div class="table-spacer"></div>
-        <div class="table-grid">
-            <div>{build_table_html(left_df)}</div>
-            <div>{build_table_html(right_df)}</div>
-        </div>
+
+        <table class="team-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Team</th>
+                    <th>Owned By</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {rows_html}
+            </tbody>
+        </table>
     </body>
     </html>
     """
-
-    table_height = max(1080, len(df) * 36 + 120)
-    components.html(table_html, height=table_height, scrolling=False)
 
 
 st.markdown(
@@ -494,6 +472,7 @@ events_df = extract_table(raw_df, ["Category", "Time", "Team", "Player"])
 teams_df = teams_df[teams_df["Nation"] != ""].copy()
 teams_df = teams_df.reset_index(drop=True)
 
+
 banner_path = os.path.join(ASSET_FOLDER, BANNER_FILE)
 
 if os.path.exists(banner_path):
@@ -515,31 +494,10 @@ yellow_main, yellow_sub = event_line(yellow_time, yellow_team, yellow_player)
 red_main, red_sub = event_line(red_time, red_team, red_player)
 fav_main, fav_sub = event_line("", favourite_team, favourite_player)
 
+
 top_cols = st.columns(5)
 
-event_items = [
-    ("FASTEST GOAL", goal_main, goal_sub, "#0a9d4f"),
-    ("EARLIEST YELLOW CARD", yellow_main, yellow_sub, "#f2a900"),
-    ("EARLIEST RED CARD", red_main, red_sub, "#e33b2e"),
-    ("TOURNAMENT FAVOURITE", fav_main, fav_sub, "#0066cc"),
-]
-
-for column, item in zip(top_cols[:4], event_items):
-    title, main, sub, colour = item
-
-    with column:
-        st.markdown(
-            f"""
-            <div class="section-card">
-                <div class="event-title">{title}</div>
-                <div class="event-main" style="color:{colour};">{main}</div>
-                <div class="event-sub">{sub}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-with top_cols[4]:
+with top_cols[0]:
     prize_rows = ""
 
     for prize, amount in PRIZES.items():
@@ -559,6 +517,29 @@ with top_cols[4]:
         """,
         unsafe_allow_html=True
     )
+
+
+event_items = [
+    ("FASTEST GOAL", goal_main, goal_sub, "#0a9d4f"),
+    ("EARLIEST YELLOW CARD", yellow_main, yellow_sub, "#f2a900"),
+    ("EARLIEST RED CARD", red_main, red_sub, "#e33b2e"),
+    ("TOURNAMENT FAVOURITE", fav_main, fav_sub, "#0066cc"),
+]
+
+for column, item in zip(top_cols[1:], event_items):
+    title, main, sub, colour = item
+
+    with column:
+        st.markdown(
+            f"""
+            <div class="section-card">
+                <div class="event-title">{title}</div>
+                <div class="event-main" style="color:{colour};">{main}</div>
+                <div class="event-sub">{sub}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
 
 search = st.text_input("Search teams or owners", "")
@@ -591,7 +572,15 @@ if filter_option == "Eliminated":
 
 filtered_df = filtered_df.reset_index(drop=True)
 
-render_team_tables(filtered_df)
+table_html = build_single_table_html(filtered_df)
+table_height = max(1700, len(filtered_df) * 36 + 120)
+
+components.html(
+    table_html,
+    height=table_height,
+    scrolling=False
+)
+
 
 st.markdown(
     """
