@@ -326,21 +326,23 @@ st.markdown(
         margin-bottom: 12px;
     }
 
+    .top-layout {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr 1fr 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 10px;
+    }
+
     .section-card {
         background: white;
         border-radius: 16px;
         padding: 16px;
         box-shadow: 0 6px 18px rgba(15, 35, 75, 0.08);
         border: 1px solid #d9e6f5;
-        height: 185px;
+        height: 170px;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        margin-bottom: 10px;
-    }
-
-    .prize-card {
-        height: 185px;
     }
 
     .event-title {
@@ -380,9 +382,9 @@ st.markdown(
         justify-content: space-between;
         align-items: center;
         border-bottom: 1px solid #e5edf6;
-        padding: 4px 0;
+        padding: 5px 0;
         color: #0a1f44;
-        font-size: 11px;
+        font-size: 12px;
     }
 
     .prize-row:last-child {
@@ -418,42 +420,52 @@ st.markdown(
             padding-top: 0.35rem;
         }
 
-        .section-card {
-            height: 118px;
-            border-radius: 13px;
-            padding: 10px;
-            margin-bottom: 6px;
+        .top-layout {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
 
         .prize-card {
-            height: 150px;
+            grid-column: 1 / 3;
+        }
+
+        .section-card {
+            height: 108px;
+            border-radius: 13px;
+            padding: 10px;
         }
 
         .event-title {
-            font-size: 10px;
-            min-height: 18px;
+            font-size: 9px;
+            min-height: 16px;
+            line-height: 1.15;
         }
 
         .event-main {
-            font-size: 23px;
-            min-height: 30px;
+            font-size: 22px;
+            min-height: 28px;
             margin-top: 2px;
         }
 
         .event-sub {
-            font-size: 11px;
-            min-height: 16px;
-            margin-top: 2px;
+            font-size: 10px;
+            min-height: 14px;
+            margin-top: 1px;
+        }
+
+        .prize-card .section-card {
+            height: auto;
+            min-height: 118px;
         }
 
         .prize-title {
-            font-size: 12px;
-            margin-bottom: 2px;
+            font-size: 14px;
+            margin-bottom: 3px;
         }
 
         .prize-row {
-            font-size: 9px;
-            padding: 2px 0;
+            font-size: 10px;
+            padding: 3px 0;
         }
 
         .footer-card {
@@ -480,7 +492,6 @@ events_df = extract_table(raw_df, ["Category", "Time", "Team", "Player"])
 teams_df = teams_df[teams_df["Nation"] != ""].copy()
 teams_df = teams_df.reset_index(drop=True)
 
-
 banner_path = os.path.join(ASSET_FOLDER, BANNER_FILE)
 
 if os.path.exists(banner_path):
@@ -502,52 +513,62 @@ yellow_main, yellow_sub = event_line(yellow_time, yellow_team, yellow_player)
 red_main, red_sub = event_line(red_time, red_team, red_player)
 fav_main, fav_sub = event_line("", favourite_team, favourite_player)
 
+prize_rows = ""
 
-top_cols = st.columns(5)
+for prize, amount in PRIZES.items():
+    prize_rows += f"""
+    <div class="prize-row">
+        <span>{prize}</span>
+        <span class="prize-amount">{amount}</span>
+    </div>
+    """
 
-with top_cols[0]:
-    prize_rows = ""
+top_html = f"""
+<div class="top-layout">
 
-    for prize, amount in PRIZES.items():
-        prize_rows += f"""
-        <div class="prize-row">
-            <span>{prize}</span>
-            <span class="prize-amount">{amount}</span>
-        </div>
-        """
-
-    st.markdown(
-        f"""
-        <div class="section-card prize-card">
+    <div class="prize-card">
+        <div class="section-card">
             <div class="prize-title">PRIZE BREAKDOWN</div>
             {prize_rows}
         </div>
-        """,
-        unsafe_allow_html=True
-    )
+    </div>
 
+    <div>
+        <div class="section-card">
+            <div class="event-title">FASTEST GOAL</div>
+            <div class="event-main" style="color:#0a9d4f;">{goal_main}</div>
+            <div class="event-sub">{goal_sub}</div>
+        </div>
+    </div>
 
-event_items = [
-    ("FASTEST GOAL", goal_main, goal_sub, "#0a9d4f"),
-    ("EARLIEST YELLOW CARD", yellow_main, yellow_sub, "#f2a900"),
-    ("EARLIEST RED CARD", red_main, red_sub, "#e33b2e"),
-    ("TOURNAMENT FAVOURITE", fav_main, fav_sub, "#0066cc"),
-]
+    <div>
+        <div class="section-card">
+            <div class="event-title">EARLIEST YELLOW CARD</div>
+            <div class="event-main" style="color:#f2a900;">{yellow_main}</div>
+            <div class="event-sub">{yellow_sub}</div>
+        </div>
+    </div>
 
-for column, item in zip(top_cols[1:], event_items):
-    title, main, sub, colour = item
+    <div>
+        <div class="section-card">
+            <div class="event-title">EARLIEST RED CARD</div>
+            <div class="event-main" style="color:#e33b2e;">{red_main}</div>
+            <div class="event-sub">{red_sub}</div>
+        </div>
+    </div>
 
-    with column:
-        st.markdown(
-            f"""
-            <div class="section-card">
-                <div class="event-title">{title}</div>
-                <div class="event-main" style="color:{colour};">{main}</div>
-                <div class="event-sub">{sub}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+    <div>
+        <div class="section-card">
+            <div class="event-title">TOURNAMENT FAVOURITE</div>
+            <div class="event-main" style="color:#0066cc;">{fav_main}</div>
+            <div class="event-sub">{fav_sub}</div>
+        </div>
+    </div>
+
+</div>
+"""
+
+st.markdown(top_html, unsafe_allow_html=True)
 
 
 search = st.text_input("Search teams or owners", "")
