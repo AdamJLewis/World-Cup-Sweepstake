@@ -11,7 +11,7 @@ GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1GDI1_PquleJILX6fRqbi
 ASSET_FOLDER = "Assets"
 BANNER_FILE = "Page_Banner.png"
 
-TEAMS_TAKEN = 45
+TEAMS_TAKEN = 44
 TOTAL_TEAMS = 48
 
 DRAW_MESSAGE = "The draw will be completed before 3PM on Thursday 11th June."
