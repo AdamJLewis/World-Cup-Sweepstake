@@ -571,7 +571,7 @@ st.markdown(
         padding: 14px;
         border: 1px solid #0fd084;
         box-shadow: 0 8px 24px rgba(0, 232, 150, 0.12);
-        margin-top: 12px;
+        margin-top: -8px;
         text-align: center;
     }
 
@@ -636,7 +636,7 @@ st.markdown(
         }
 
         .video-link-card {
-            margin-top: 8px;
+            margin-top: -14px;
             margin-bottom: 8px;
             padding: 12px;
         }
