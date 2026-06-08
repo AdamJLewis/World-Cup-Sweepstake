@@ -11,10 +11,7 @@ GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1GDI1_PquleJILX6fRqbi
 ASSET_FOLDER = "Assets"
 BANNER_FILE = "Page_Banner.png"
 
-TEAMS_TAKEN = 48
-TOTAL_TEAMS = 48
-
-DRAW_MESSAGE = "The draw will be completed before 3PM on Thursday 11th June."
+DRAW_VIDEO_EMBED_URL = "https://drive.google.com/file/d/1OG5E4v4hIy6Br6bCWTIcCYTUsstXxU4a/preview"
 
 PRIZES = {
     "Tournament Winner": "£100",
@@ -33,6 +30,7 @@ st.set_page_config(
 
 def get_google_sheet_csv_url(sheet_url):
     match = re.search(r"/d/([a-zA-Z0-9-_]+)", sheet_url)
+
     if not match:
         st.error("Could not read the Google Sheet ID.")
         st.stop()
@@ -299,18 +297,7 @@ def build_single_table_html(df):
     """
 
 
-def build_top_cards_html(
-    goal_main,
-    goal_sub,
-    yellow_main,
-    yellow_sub,
-    red_main,
-    red_sub,
-    fav_main,
-    fav_sub,
-    teams_taken,
-    total_teams
-):
+def build_prize_card_html():
     prize_rows = ""
 
     for prize, amount in PRIZES.items():
@@ -331,16 +318,107 @@ def build_top_cards_html(
                 background: transparent;
             }}
 
-            .top-layout {{
-                display: grid;
-                grid-template-columns: 1.15fr 4fr;
-                gap: 16px;
+            .section-card {{
+                background: linear-gradient(180deg, #ffffff 0%, #f6fff9 100%);
+                border-radius: 16px;
+                padding: 16px;
+                box-shadow: 0 8px 24px rgba(0, 232, 150, 0.12);
+                border: 1px solid #0fd084;
+                min-height: 170px;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                position: relative;
+                overflow: hidden;
             }}
 
-            .left-stack {{
-                display: grid;
-                grid-template-columns: 1fr;
-                gap: 12px;
+            .section-card::before {{
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 5px;
+                background: linear-gradient(90deg, #00c875, #d8a23a, #005bbb);
+            }}
+
+            .prize-title {{
+                text-align: center;
+                color: #061b3a;
+                margin: 0 0 6px 0;
+                font-size: 17px;
+                font-weight: 900;
+                letter-spacing: 0.3px;
+            }}
+
+            .prize-row {{
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                border-bottom: 1px solid #dce8ef;
+                padding: 5px 0;
+                color: #07142c;
+                font-size: 12px;
+            }}
+
+            .prize-row:last-child {{
+                border-bottom: none;
+            }}
+
+            .prize-amount {{
+                font-weight: 900;
+                color: #d8a23a;
+            }}
+
+            @media (max-width: 900px) {{
+                .section-card {{
+                    min-height: 122px;
+                    border-radius: 13px;
+                    padding: 10px;
+                }}
+
+                .prize-title {{
+                    font-size: 14px;
+                    margin-bottom: 3px;
+                }}
+
+                .prize-row {{
+                    font-size: 10px;
+                    padding: 3px 0;
+                }}
+            }}
+        </style>
+    </head>
+
+    <body>
+        <div class="section-card">
+            <div class="prize-title">PRIZE BREAKDOWN</div>
+            {prize_rows}
+        </div>
+    </body>
+    </html>
+    """
+
+
+def build_event_cards_html(
+    goal_main,
+    goal_sub,
+    yellow_main,
+    yellow_sub,
+    red_main,
+    red_sub,
+    fav_main,
+    fav_sub
+):
+    return f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                margin: 0;
+                font-family: Arial, sans-serif;
+                background: transparent;
             }}
 
             .event-grid {{
@@ -374,35 +452,6 @@ def build_top_cards_html(
                 background: linear-gradient(90deg, #00c875, #d8a23a, #005bbb);
             }}
 
-            .draw-card {{
-                min-height: 92px;
-                height: auto;
-            }}
-
-            .draw-number {{
-                color: #00a95c;
-                font-size: 30px;
-                font-weight: 900;
-                text-align: center;
-                line-height: 1;
-            }}
-
-            .draw-label {{
-                color: #061b3a;
-                font-size: 12px;
-                font-weight: 900;
-                text-align: center;
-                margin-top: 6px;
-            }}
-
-            .draw-message {{
-                color: #07142c;
-                font-size: 12px;
-                text-align: center;
-                margin-top: 7px;
-                line-height: 1.25;
-            }}
-
             .event-title {{
                 color: #061b3a;
                 font-size: 12px;
@@ -428,44 +477,7 @@ def build_top_cards_html(
                 min-height: 20px;
             }}
 
-            .prize-title {{
-                text-align: center;
-                color: #061b3a;
-                margin: 0 0 6px 0;
-                font-size: 17px;
-                font-weight: 900;
-                letter-spacing: 0.3px;
-            }}
-
-            .prize-row {{
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 1px solid #dce8ef;
-                padding: 5px 0;
-                color: #07142c;
-                font-size: 12px;
-            }}
-
-            .prize-row:last-child {{
-                border-bottom: none;
-            }}
-
-            .prize-amount {{
-                font-weight: 900;
-                color: #d8a23a;
-            }}
-
             @media (max-width: 900px) {{
-                .top-layout {{
-                    grid-template-columns: 1fr;
-                    gap: 8px;
-                }}
-
-                .left-stack {{
-                    gap: 8px;
-                }}
-
                 .event-grid {{
                     grid-template-columns: 1fr 1fr;
                     gap: 8px;
@@ -475,30 +487,6 @@ def build_top_cards_html(
                     height: 108px;
                     border-radius: 13px;
                     padding: 10px;
-                }}
-
-                .prize-card {{
-                    height: auto;
-                    min-height: 122px;
-                }}
-
-                .draw-card {{
-                    min-height: 94px;
-                    height: auto;
-                }}
-
-                .draw-number {{
-                    font-size: 25px;
-                }}
-
-                .draw-label {{
-                    font-size: 10px;
-                    margin-top: 4px;
-                }}
-
-                .draw-message {{
-                    font-size: 10px;
-                    margin-top: 5px;
                 }}
 
                 .event-title {{
@@ -518,62 +506,35 @@ def build_top_cards_html(
                     min-height: 14px;
                     margin-top: 1px;
                 }}
-
-                .prize-title {{
-                    font-size: 14px;
-                    margin-bottom: 3px;
-                }}
-
-                .prize-row {{
-                    font-size: 10px;
-                    padding: 3px 0;
-                }}
             }}
         </style>
     </head>
 
     <body>
-        <div class="top-layout">
-
-            <div class="left-stack">
-                <div class="section-card prize-card">
-                    <div class="prize-title">PRIZE BREAKDOWN</div>
-                    {prize_rows}
-                </div>
-
-                <div class="section-card draw-card">
-                    <div class="draw-number">{teams_taken}/{total_teams}</div>
-                    <div class="draw-label">TEAMS TAKEN</div>
-                    <div class="draw-message">{DRAW_MESSAGE}</div>
-                </div>
+        <div class="event-grid">
+            <div class="section-card">
+                <div class="event-title">FASTEST GOAL</div>
+                <div class="event-main" style="color:#00a95c;">{goal_main}</div>
+                <div class="event-sub">{goal_sub}</div>
             </div>
 
-            <div class="event-grid">
-                <div class="section-card">
-                    <div class="event-title">FASTEST GOAL</div>
-                    <div class="event-main" style="color:#00a95c;">{goal_main}</div>
-                    <div class="event-sub">{goal_sub}</div>
-                </div>
-
-                <div class="section-card">
-                    <div class="event-title">EARLIEST YELLOW CARD</div>
-                    <div class="event-main" style="color:#d8a23a;">{yellow_main}</div>
-                    <div class="event-sub">{yellow_sub}</div>
-                </div>
-
-                <div class="section-card">
-                    <div class="event-title">EARLIEST RED CARD</div>
-                    <div class="event-main" style="color:#ef3340;">{red_main}</div>
-                    <div class="event-sub">{red_sub}</div>
-                </div>
-
-                <div class="section-card">
-                    <div class="event-title">TOURNAMENT FAVOURITE</div>
-                    <div class="event-main" style="color:#005bbb;">{fav_main}</div>
-                    <div class="event-sub">{fav_sub}</div>
-                </div>
+            <div class="section-card">
+                <div class="event-title">EARLIEST YELLOW CARD</div>
+                <div class="event-main" style="color:#d8a23a;">{yellow_main}</div>
+                <div class="event-sub">{yellow_sub}</div>
             </div>
 
+            <div class="section-card">
+                <div class="event-title">EARLIEST RED CARD</div>
+                <div class="event-main" style="color:#ef3340;">{red_main}</div>
+                <div class="event-sub">{red_sub}</div>
+            </div>
+
+            <div class="section-card">
+                <div class="event-title">TOURNAMENT FAVOURITE</div>
+                <div class="event-main" style="color:#005bbb;">{fav_main}</div>
+                <div class="event-sub">{fav_sub}</div>
+            </div>
         </div>
     </body>
     </html>
@@ -604,6 +565,31 @@ st.markdown(
         border: 1px solid rgba(0, 232, 150, 0.45);
     }
 
+    .video-card {
+        background: linear-gradient(180deg, #ffffff 0%, #f6fff9 100%);
+        border-radius: 16px;
+        padding: 10px;
+        border: 1px solid #0fd084;
+        box-shadow: 0 8px 24px rgba(0, 232, 150, 0.12);
+        margin-top: 12px;
+        margin-bottom: 0;
+    }
+
+    .video-title {
+        text-align: center;
+        font-size: 14px;
+        font-weight: 900;
+        color: #061b3a;
+        margin-bottom: 8px;
+    }
+
+    .draw-video-frame {
+        width: 100%;
+        height: 260px;
+        border: 0;
+        border-radius: 12px;
+    }
+
     .footer-card {
         background: linear-gradient(90deg, #061b3a, #09284d);
         border-radius: 16px;
@@ -629,6 +615,19 @@ st.markdown(
             padding-left: 0.45rem;
             padding-right: 0.45rem;
             padding-top: 1rem;
+        }
+
+        .video-card {
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        .video-title {
+            font-size: 12px;
+        }
+
+        .draw-video-frame {
+            height: 220px;
         }
 
         .footer-card {
@@ -681,24 +680,46 @@ yellow_main, yellow_sub = event_line(yellow_time, yellow_team, yellow_player)
 red_main, red_sub = event_line(red_time, red_team, red_player)
 fav_main, fav_sub = event_line("", favourite_team, favourite_player)
 
-top_cards_html = build_top_cards_html(
-    goal_main,
-    goal_sub,
-    yellow_main,
-    yellow_sub,
-    red_main,
-    red_sub,
-    fav_main,
-    fav_sub,
-    TEAMS_TAKEN,
-    TOTAL_TEAMS
-)
 
-components.html(
-    top_cards_html,
-    height=500,
-    scrolling=False
-)
+left_col, right_col = st.columns([1.15, 4])
+
+with left_col:
+    components.html(
+        build_prize_card_html(),
+        height=190,
+        scrolling=False
+    )
+
+    st.markdown(
+        f"""
+        <div class="video-card">
+            <div class="video-title">DRAW VIDEO</div>
+            <iframe
+                class="draw-video-frame"
+                src="{DRAW_VIDEO_EMBED_URL}"
+                allow="autoplay"
+                allowfullscreen>
+            </iframe>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+with right_col:
+    components.html(
+        build_event_cards_html(
+            goal_main,
+            goal_sub,
+            yellow_main,
+            yellow_sub,
+            red_main,
+            red_sub,
+            fav_main,
+            fav_sub
+        ),
+        height=190,
+        scrolling=False
+    )
 
 
 table_html = build_single_table_html(teams_df)
