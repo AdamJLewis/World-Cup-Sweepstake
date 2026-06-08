@@ -11,7 +11,7 @@ GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1GDI1_PquleJILX6fRqbi
 ASSET_FOLDER = "Assets"
 BANNER_FILE = "Page_Banner.png"
 
-DRAW_VIDEO_EMBED_URL = "https://drive.google.com/file/d/1OG5E4v4hIy6Br6bCWTIcCYTUsstXxU4a/preview"
+DRAW_VIDEO_URL = "https://drive.google.com/file/d/1OG5E4v4hIy6Br6bCWTIcCYTUsstXxU4a/view?usp=sharing"
 
 PRIZES = {
     "Tournament Winner": "£100",
@@ -565,14 +565,14 @@ st.markdown(
         border: 1px solid rgba(0, 232, 150, 0.45);
     }
 
-    .video-card {
+    .video-link-card {
         background: linear-gradient(180deg, #ffffff 0%, #f6fff9 100%);
         border-radius: 16px;
-        padding: 10px;
+        padding: 14px;
         border: 1px solid #0fd084;
         box-shadow: 0 8px 24px rgba(0, 232, 150, 0.12);
         margin-top: 12px;
-        margin-bottom: 0;
+        text-align: center;
     }
 
     .video-title {
@@ -580,14 +580,32 @@ st.markdown(
         font-size: 14px;
         font-weight: 900;
         color: #061b3a;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
 
-    .draw-video-frame {
-        width: 100%;
-        height: 260px;
-        border: 0;
+    .video-link-button {
+        display: block;
+        text-decoration: none !important;
+        background: linear-gradient(90deg, #061b3a, #09284d);
+        color: #ffffff !important;
+        padding: 13px 12px;
         border-radius: 12px;
+        font-weight: 900;
+        font-size: 13px;
+        border: 1px solid #0fd084;
+        box-shadow: 0 6px 16px rgba(0, 232, 150, 0.18);
+    }
+
+    .video-link-button:hover {
+        background: linear-gradient(90deg, #09284d, #061b3a);
+        color: #f4b83f !important;
+    }
+
+    .video-note {
+        color: #07142c;
+        font-size: 11px;
+        margin-top: 8px;
+        line-height: 1.25;
     }
 
     .footer-card {
@@ -617,17 +635,19 @@ st.markdown(
             padding-top: 1rem;
         }
 
-        .video-card {
+        .video-link-card {
             margin-top: 8px;
             margin-bottom: 8px;
+            padding: 12px;
         }
 
         .video-title {
             font-size: 12px;
         }
 
-        .draw-video-frame {
-            height: 220px;
+        .video-link-button {
+            font-size: 12px;
+            padding: 12px 10px;
         }
 
         .footer-card {
@@ -692,14 +712,14 @@ with left_col:
 
     st.markdown(
         f"""
-        <div class="video-card">
+        <div class="video-link-card">
             <div class="video-title">DRAW VIDEO</div>
-            <iframe
-                class="draw-video-frame"
-                src="{DRAW_VIDEO_EMBED_URL}"
-                allow="autoplay"
-                allowfullscreen>
-            </iframe>
+            <a class="video-link-button" href="{DRAW_VIDEO_URL}" target="_blank">
+                ▶ Watch the Draw
+            </a>
+            <div class="video-note">
+                Opens in Google Drive
+            </div>
         </div>
         """,
         unsafe_allow_html=True
