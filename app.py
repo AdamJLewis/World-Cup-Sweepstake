@@ -760,6 +760,8 @@ st.markdown(
         Pick an available team for £5. Multiple entries allowed.
         The tracker updates from the Google Sheet and shows team ownership,
         tournament status, prize categories and live tournament milestones.
+
+        Note: Fastest Goal, Earliest Yellow and Red Card categories are in game minutes.
         </p>
         <p style="font-weight:900;">🏆 Good luck and enjoy the tournament!</p>
     </div>
