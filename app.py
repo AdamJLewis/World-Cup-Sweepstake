@@ -636,7 +636,7 @@ st.markdown(
         }
 
         .video-link-card {
-            margin-top: -34px;
+            margin-top: -24px;
             margin-bottom: 18px;
             padding: 12px;
         }
