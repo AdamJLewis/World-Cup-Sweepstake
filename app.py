@@ -324,7 +324,7 @@ def build_prize_card_html():
                 padding: 16px;
                 box-shadow: 0 8px 24px rgba(0, 232, 150, 0.12);
                 border: 1px solid #0fd084;
-                min-height: 170px;
+                min-height: 150px;
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
@@ -571,7 +571,7 @@ st.markdown(
         padding: 14px;
         border: 1px solid #0fd084;
         box-shadow: 0 8px 24px rgba(0, 232, 150, 0.12);
-        margin-top: -8px;
+        margin-top: -20px;
         text-align: center;
     }
 
@@ -636,8 +636,8 @@ st.markdown(
         }
 
         .video-link-card {
-            margin-top: -14px;
-            margin-bottom: 8px;
+            margin-top: -34px;
+            margin-bottom: 18px;
             padding: 12px;
         }
 
@@ -706,7 +706,7 @@ left_col, right_col = st.columns([1.15, 4])
 with left_col:
     components.html(
         build_prize_card_html(),
-        height=190,
+        height=160,
         scrolling=False
     )
 
@@ -737,7 +737,7 @@ with right_col:
             fav_main,
             fav_sub
         ),
-        height=190,
+        height=250,
         scrolling=False
     )
 
@@ -760,8 +760,6 @@ st.markdown(
         Pick an available team for £5. Multiple entries allowed.
         The tracker updates from the Google Sheet and shows team ownership,
         tournament status, prize categories and live tournament milestones.
-
-        Note: Fastest Goal, Earliest Yellow and Red Card categories are in game minutes.
         </p>
         <p style="font-weight:900;">🏆 Good luck and enjoy the tournament!</p>
     </div>
