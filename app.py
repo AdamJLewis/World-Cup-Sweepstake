@@ -16,9 +16,9 @@ DRAW_VIDEO_URL = "https://drive.google.com/file/d/1OG5E4v4hIy6Br6bCWTIcCYTUsstXx
 PRIZES = {
     "Tournament Winner": "£100",
     "Tournament Runner Up": "£50",
-    "Earliest Goal": "£30",
-    "Earliest Yellow Card": "£30",
-    "Earliest Red Card": "£30",
+    "Fastest Goal": "£30",
+    "Fastest Yellow Card": "£30",
+    "Fastest Red Card": "£30",
 }
 
 st.set_page_config(
@@ -519,13 +519,13 @@ def build_event_cards_html(
             </div>
 
             <div class="section-card">
-                <div class="event-title">EARLIEST YELLOW CARD</div>
+                <div class="event-title">FASTEST YELLOW CARD</div>
                 <div class="event-main" style="color:#d8a23a;">{yellow_main}</div>
                 <div class="event-sub">{yellow_sub}</div>
             </div>
 
             <div class="section-card">
-                <div class="event-title">EARLIEST RED CARD</div>
+                <div class="event-title">FASTEST RED CARD</div>
                 <div class="event-main" style="color:#ef3340;">{red_main}</div>
                 <div class="event-sub">{red_sub}</div>
             </div>
